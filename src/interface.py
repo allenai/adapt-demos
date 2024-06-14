@@ -1,3 +1,6 @@
+# modified from https://github.com/gradio-app/gradio/blob/main/gradio/chat_interface.py
+# added the inference of the safety filter after completion of the chatbot
+# TODO in the future, will want to add code that hides text until classified as safe
 """
 This file defines a useful high-level abstraction to build Gradio chatbots: ChatInterface.
 """
