@@ -6,6 +6,6 @@
         {{ '<|assistant|>\n'  + message['content'] + eos_token }}
     {% endif %}
     {% if loop.last and add_generation_prompt %}
-        {{ '<|assistant|>\n' }}
+        {{ '<|assistant|>' }}
     {% endif %}
 {% endfor %}

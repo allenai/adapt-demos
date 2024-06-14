@@ -2,6 +2,7 @@ import argparse
 import gradio as gr
 from openai import OpenAI
 from src.prompts import WILDGUARD_INPUT_FORMAT
+from src.interface import SafetyChatInterface
 
 # Define an argument parser
 parser = argparse.ArgumentParser(description="Gradio App with Custom OpenAI API Port")
@@ -28,7 +29,7 @@ else:
     SAFETY_FILTER_ON = False
 
 # Prediction function for Gradio
-def predict(message, history, temperature, use_safety_filter):
+def predict(message, history, temperature, safety_filter_checkbox):
     # Create completion with OpenAI client
     if args.completion_mode:
         response = model_client.chat.completions.create(
@@ -66,54 +67,41 @@ def predict(message, history, temperature, use_safety_filter):
             if chunk.choices[0].delta.content is not None:
                 partial_message = partial_message + chunk.choices[0].delta.content
                 yield partial_message
-        
-        # Check if safety filter is enabled
-        if use_safety_filter:
-            safety_formatted_input = WILDGUARD_INPUT_FORMAT.format(prompt=message, response=partial_message)
-            safety_history_openai_format = history_openai_format[:-1] + [{"role": "user", "content": safety_formatted_input}]
-            safety_response = safety_client.chat.completions.create(
-                model=args.safety_model,
-                messages=safety_history_openai_format,
-                temperature=temperature,
-                stream=True,
-            )
-            safety_message = partial_message + "\n\nSafety Filter Feedback:\n\n"
-            for chunk in safety_response:
-                if chunk.choices[0].delta.content is not None:
-                    safety_message = safety_message + chunk.choices[0].delta.content
-                    yield safety_message
 
-        #     # Update the filter_feedback textbox
-        #     filter_feedback.update(value=safety_response.choices[0].message.content)
-        # else:
-        #     # If safety filter is not used, clear the feedback box
-        #     filter_feedback.update(value="Safety Filter Not Enabled")
+if SAFETY_FILTER_ON:
+    def run_safety_filter(message, history, temperature, safety_filter_checkbox):
+        if not safety_filter_checkbox:
+            return "Safety filter not enabled"
+        history_openai_format = []
+        for human, assistant in history[:-1]:
+            history_openai_format.append({"role": "user", "content": human})
+            history_openai_format.append({"role": "assistant", "content": assistant})
 
-        # Note, when you use streaming you'll want to use different logic.
-        # See the completion mode example above which uses streaming.
-
-        # return main_response
-
+        last_query, last_response = history[-1]
+        safety_formatted_input = WILDGUARD_INPUT_FORMAT.format(prompt=last_query, response=last_response)
+        safety_history_openai_format = history_openai_format + [{"role": "user", "content": safety_formatted_input}]
+        safety_response = safety_client.chat.completions.create(
+            model=args.safety_model,
+            messages=safety_history_openai_format,
+            temperature=temperature,
+            stream=False,
+        )
+        return """### Safety info: \n""" + safety_response.choices[0].message.content.replace("yes","yes\n").replace("no","no\n")
+else:
+    def run_safety_filter(message, history, temperature):
+        return "Safety filter not enabled"
 
 # Launch Gradio app
 temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
-
 safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
 
-with gr.Blocks(fill_height=True) as app:
-    demo = gr.ChatInterface(predict, 
-                                additional_inputs=[temperature_slider, safety_filter_checkbox],
-                                title="AI2 Internal Demo Model"
-                                )
-    with gr.Row():
-        # add a textbox for safety feedback
-        filter_text = gr.Markdown(f"""# Details
-                                    Model: {args.model}
+demo = SafetyChatInterface(predict,
+                            run_safety_filter, 
+                            additional_inputs=[temperature_slider, safety_filter_checkbox],
+                            title="AI2 Internal Demo Model",
+                            description=f"""Model: {args.model} 
+                            
+                            Safety Model: {args.safety_model}""",
+                            )
 
-                                    Safety Model: {args.safety_model}
-
-                                    Note: Safety only is applied on the most recent prompt.
-                                    """)
-        filter_feedback = gr.Textbox(label="Feedback", placeholder="(safety filter text here once run)", type="text")
-
-app.queue().launch(share=True)
+demo.queue().launch(share=True)
