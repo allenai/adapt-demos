@@ -183,7 +183,6 @@ demo = SafetyChatInterface(
     description=f"Model: {args.model}\n\nSafety Model: {args.safety_model}",
     head=header,
     css=css,
-    css=css,
 )
 
 demo.queue().launch(share=True)
