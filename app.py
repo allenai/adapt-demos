@@ -123,13 +123,13 @@ if SAFETY_FILTER_ON:
         )
         safety_labels_html = f"<div class='classifier-text'>{safety_labels_html}</div>"
 
-        if "Harmful response" not in safety_labels:
+        if not safety_labels or "Response refusal" not in safety_labels:
             logger.error(
-                f"'Harmful response' not found. "
-                f"Safety classifier response: [{safety_response.choices[0].message.content}]"
+                f"Safety class response cannot be parsed: "
+                f"[{safety_response.choices[0].message.content}]"
             )
             safe_response = HTML("<p class='text-danger'>Safety response cannot be parsed</p>")
-        elif safety_labels["Harmful response"].lower() == "yes":
+        elif safety_labels[next(iter(safety_labels))][1].lower() == "yes" and safety_labels["Response refusal"].lower() == "no":
             make_response_safe_input = MAKE_SAFE_PROMPT.format(prompt=last_query, response=last_response)
             make_response_safe_openai_format = history_openai_format + [{"role": "user", "content": make_response_safe_input}]
 
@@ -141,7 +141,8 @@ if SAFETY_FILTER_ON:
 
             safe_response = HTML(f"""<div class="card text-bg-success">
                 <h4 class="card-title safe-title">Safe Response</h4>
-                <div class="card-body safe-text">{response.choices[0].message.content}</div>
+                <div class="card-body safe-text">{response.choices[0].message.content}
+                </div>
             </div>""")
         else:
             safe_response = "Assistant's response is safe"
