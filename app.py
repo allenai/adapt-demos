@@ -121,8 +121,15 @@ if SAFETY_FILTER_ON:
                 for key, label in safety_labels.items()
             ]
         )
+        safety_labels_html = f"<div class='classifier-text'>{safety_labels_html}</div>"
 
-        if safety_labels["Harmful response"].lower() == "yes":
+        if "Harmful response" not in safety_labels:
+            logger.error(
+                f"'Harmful response' not found. "
+                f"Safety classifier response: [{safety_response.choices[0].message.content}]"
+            )
+            safe_response = HTML("<p class='text-danger'>Safety response cannot be parsed</p>")
+        elif safety_labels["Harmful response"].lower() == "yes":
             make_response_safe_input = MAKE_SAFE_PROMPT.format(prompt=last_query, response=last_response)
             make_response_safe_openai_format = history_openai_format + [{"role": "user", "content": make_response_safe_input}]
 
@@ -132,9 +139,9 @@ if SAFETY_FILTER_ON:
                 temperature=temperature,
             )
 
-            safe_response = HTML(f"""<div class="card">
-                <h5 class="card-title">Safe Response</h5>
-                <div class="card-body">
+            safe_response = HTML(f"""<div class="card text-bg-success">
+                <h4 class="card-title safe-title">Safe Response</h4>
+                <div class="card-body safe-text">
                 {response.choices[0].message.content}
                 </div>
             </div>""")
@@ -155,6 +162,19 @@ header = """
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 """
 
+css = """
+.classifier-text {
+    font-size: 20px !important;
+}
+.safe-text {
+    font-size: 18px !important;
+    color: white;
+}
+.safe-title {
+    color: white;
+}
+"""
+
 demo = SafetyChatInterface(
     predict,
     run_safety_filter,
@@ -162,6 +182,8 @@ demo = SafetyChatInterface(
     title="AI2 Internal Demo Model",
     description=f"Model: {args.model}\n\nSafety Model: {args.safety_model}",
     head=header,
+    css=css,
+    css=css,
 )
 
 demo.queue().launch(share=True)
