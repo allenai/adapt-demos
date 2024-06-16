@@ -141,9 +141,7 @@ if SAFETY_FILTER_ON:
 
             safe_response = HTML(f"""<div class="card text-bg-success">
                 <h4 class="card-title safe-title">Safe Response</h4>
-                <div class="card-body safe-text">
-                {response.choices[0].message.content}
-                </div>
+                <div class="card-body safe-text">{response.choices[0].message.content}</div>
             </div>""")
         else:
             safe_response = "Assistant's response is safe"
@@ -167,7 +165,7 @@ css = """
     font-size: 20px !important;
 }
 .safe-text {
-    font-size: 18px !important;
+    font-size: 16px !important;
     color: white;
 }
 .safe-title {
