@@ -187,15 +187,24 @@ class SafetyChatInterface(Blocks):
                         )
                     if description:
                         Markdown(description)
-                with Column(scale=2):
+                # with Column(scale=2):
+                #     self.safety_log = Markdown("Safety content to appear here")
+
+            with Row():
+                with Column(scale=4):
+                    if chatbot:
+                        self.chatbot = chatbot.render()
+                    else:
+                        self.chatbot = Chatbot(
+                            label="Chatbot", scale=1, height=200 if fill_height else None
+                        )
+
+                with Column(scale=1):
                     self.safety_log = Markdown("Safety content to appear here")
 
-            if chatbot:
-                self.chatbot = chatbot.render()
-            else:
-                self.chatbot = Chatbot(
-                    label="Chatbot", scale=1, height=200 if fill_height else None
-                )
+                    self.safe_response = Markdown(
+                        "If assistant response is detected as harmful, a safe version would appear here"
+                    )
 
             with Row():
                 for btn in [retry_btn, undo_btn, clear_btn]:
@@ -360,8 +369,8 @@ class SafetyChatInterface(Blocks):
             ).then(
                 self.safety_fn,
                 [self.saved_input, self.chatbot_state] + self.additional_inputs,
-                [self.safety_log],
-                                concurrency_limit=cast(
+                [self.safety_log, self.safe_response],
+                concurrency_limit=cast(
                     Union[int, Literal["default"], None], self.concurrency_limit
                 ),
             )

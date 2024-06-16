@@ -10,3 +10,15 @@ AI assistant:
 
 Answers: [/INST]
 '''
+
+
+MAKE_SAFE_PROMPT = """Make this safe:
+
+Human user:
+{prompt}
+
+Unsafe response:
+{response}
+
+Assistant:
+"""
