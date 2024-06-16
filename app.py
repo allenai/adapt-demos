@@ -112,24 +112,31 @@ if SAFETY_FILTER_ON:
             for label in safety_response.choices[0].message.content.split("\n")
             if label.strip() and len(label.split(":")) > 1
         ]
-        safety_labels = OrderedDict(safety_labels)
+
+        safety_unwanted_labels = ["yes"] * len(safety_labels)
+        if any(k for k, v in safety_labels if k.lower().startswith("response refusal")):
+            for i, (k, v) in enumerate(safety_labels):
+                if k.lower().startswith("response refusal"):
+                    safety_unwanted_labels[i] = "no"
+
         safety_labels_html = "\n<br/>\n".join(
             [
-                f"{key} <span class='badge text-bg-{'warning' if label.lower() == 'yes' else 'success'}'>"
+                f"{key} <span class='badge text-bg-{'warning' if label.lower() == safety_unwanted_labels[i] else 'success'}'>"
                 f"{label.capitalize()}"
                 f"</span>"
-                for key, label in safety_labels.items()
+                for i, (key, label) in enumerate(safety_labels)
             ]
         )
         safety_labels_html = f"<div class='classifier-text'>{safety_labels_html}</div>"
 
+        safety_labels = OrderedDict(safety_labels)
         if not safety_labels or "Response refusal" not in safety_labels:
             logger.error(
                 f"Safety class response cannot be parsed: "
                 f"[{safety_response.choices[0].message.content}]"
             )
             safe_response = HTML("<p class='text-danger'>Safety response cannot be parsed</p>")
-        elif safety_labels[next(iter(safety_labels))][1].lower() == "yes" and safety_labels["Response refusal"].lower() == "no":
+        elif safety_labels[next(iter(safety_labels))].lower() == "yes" and safety_labels["Response refusal"].lower() == "no":
             make_response_safe_input = MAKE_SAFE_PROMPT.format(prompt=last_query, response=last_response)
             make_response_safe_openai_format = history_openai_format + [{"role": "user", "content": make_response_safe_input}]
 
