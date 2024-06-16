@@ -196,7 +196,7 @@ class SafetyChatInterface(Blocks):
                         self.chatbot = chatbot.render()
                     else:
                         self.chatbot = Chatbot(
-                            label="Chatbot", scale=1, height=200 if fill_height else None
+                            label="Chatbot", scale=1, height="40%" if fill_height else None
                         )
 
                 with Column(scale=1):

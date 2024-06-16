@@ -110,7 +110,7 @@ if SAFETY_FILTER_ON:
         safety_labels = [
             [s.strip() for s in label.split(":")]
             for label in safety_response.choices[0].message.content.split("\n")
-            if label.strip()
+            if label.strip() and len(label.split(":")) > 1
         ]
         safety_labels = OrderedDict(safety_labels)
         safety_labels_html = "\n<br/>\n".join(
@@ -132,11 +132,10 @@ if SAFETY_FILTER_ON:
                 temperature=temperature,
             )
 
-            safe_response = response.choices[0].message.content
-            HTML(f"""<div class="card">
+            safe_response = HTML(f"""<div class="card">
                 <h5 class="card-title">Safe Response</h5>
                 <div class="card-body">
-                {safe_response}
+                {response.choices[0].message.content}
                 </div>
             </div>""")
         else:
