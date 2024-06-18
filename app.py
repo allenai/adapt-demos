@@ -42,7 +42,7 @@ else:
 
 
 # Prediction function for Gradio
-def predict(message, history, temperature, safety_filter_checkbox):
+def predict(message, history, temperature, safety_filter_checkbox, reprompt_text):
     # Create completion with OpenAI client
     if args.completion_mode:
         logger.debug(" --- PROMPT FOR COMPLETION ---")
@@ -88,10 +88,22 @@ def predict(message, history, temperature, safety_filter_checkbox):
                 yield partial_message
 
 
+temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
+additional_inputs = [temperature_slider]
+
 if SAFETY_FILTER_ON:
-    def run_safety_filter(message, history, temperature, safety_filter_checkbox):
+    safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
+    reprompt_textarea = gr.TextArea(
+        label="Prompt to make assistant safe if detected unsafe (Use placeholder {prompt} for user input and {response} for assistant response",
+        value=MAKE_SAFE_PROMPT,
+        lines=12,
+    )
+    additional_inputs += [safety_filter_checkbox, reprompt_textarea]
+
+    def run_safety_filter(message, history, temperature, safety_filter_checkbox, reprompt_text):
         if not safety_filter_checkbox:
             return "Safety filter not enabled"
+
         history_openai_format = []
         for human, assistant in history[:-1]:
             history_openai_format.append({"role": "user", "content": human})
@@ -135,9 +147,25 @@ if SAFETY_FILTER_ON:
                 f"Safety class response cannot be parsed: "
                 f"[{safety_response.choices[0].message.content}]"
             )
-            safe_response = HTML("<p class='text-danger'>Safety response cannot be parsed</p>")
+            safety_labels_html = "<p class='text-danger'>Safety response cannot be parsed</p>"
+            safe_response = ""
         elif safety_labels[next(iter(safety_labels))].lower() == "yes" and safety_labels["Response refusal"].lower() == "no":
-            make_response_safe_input = MAKE_SAFE_PROMPT.format(prompt=last_query, response=last_response)
+            reprompt_text = reprompt_text or MAKE_SAFE_PROMPT
+
+            reprompt_kwargs = {}
+            if "{prompt}" in reprompt_text:
+                reprompt_kwargs["prompt"] = last_query
+            if "{response}" in reprompt_text:
+                reprompt_kwargs["response"] = last_response
+
+            if not reprompt_kwargs:
+                logger.warning(
+                    "Make safe prompt template does not include user input ({prompt}) or assistant response ({response})"
+                )
+            make_response_safe_input = reprompt_text.format(**reprompt_kwargs)
+            logger.debug(" --- MAKE SAFE PROMPT ---")
+            logger.debug(make_response_safe_input)
+            logger.debug(" ---")
             make_response_safe_openai_format = history_openai_format + [{"role": "user", "content": make_response_safe_input}]
 
             response = model_client.chat.completions.create(
@@ -160,8 +188,7 @@ else:
         return "Safety filter not enabled"
 
 # Launch Gradio app
-temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
-safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
+
 
 header = """
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -184,7 +211,7 @@ css = """
 demo = SafetyChatInterface(
     predict,
     run_safety_filter,
-    additional_inputs=[temperature_slider, safety_filter_checkbox],
+    additional_inputs=additional_inputs,
     title="AI2 Internal Demo Model",
     description=f"Model: {args.model}\n\nSafety Model: {args.safety_model}",
     head=header,
