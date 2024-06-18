@@ -94,7 +94,7 @@ additional_inputs = [temperature_slider]
 if SAFETY_FILTER_ON:
     safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
     reprompt_textarea = gr.TextArea(
-        label="Prompt to make assistant safe if detected unsafe (Use placeholder {prompt} for user input and {response} for assistant response",
+        label="Prompt to make assistant safe if detected unsafe. Use placeholder {prompt} for user input and {response} for assistant response.",
         value=MAKE_SAFE_PROMPT,
         lines=12,
     )
@@ -102,7 +102,7 @@ if SAFETY_FILTER_ON:
 
     def run_safety_filter(message, history, temperature, safety_filter_checkbox, reprompt_text):
         if not safety_filter_checkbox:
-            return "Safety filter not enabled"
+            return "Safety filter not enabled", ""
 
         history_openai_format = []
         for human, assistant in history[:-1]:
@@ -147,7 +147,7 @@ if SAFETY_FILTER_ON:
                 f"Safety class response cannot be parsed: "
                 f"[{safety_response.choices[0].message.content}]"
             )
-            safety_labels_html = "<p class='text-danger'>Safety response cannot be parsed</p>"
+            safety_labels_html = "<p class='text-danger'>Safety response cannot be parsed, please try again</p>"
             safe_response = ""
         elif safety_labels[next(iter(safety_labels))].lower() == "yes" and safety_labels["Response refusal"].lower() == "no":
             reprompt_text = reprompt_text or MAKE_SAFE_PROMPT
