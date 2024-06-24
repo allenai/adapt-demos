@@ -1,0 +1,5 @@
+[tool.flake8]
+exclude = [
+    "src/interface.py",
+    "src/prompts.py",
+]
