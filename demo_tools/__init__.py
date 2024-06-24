@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from .dummy_chatbot import MockOpenAIStream, MockOpenAI
-from .model_client import ModelClientHandler
+from .model_client import ModelClientHandler, run_dummy_safety_filter
 from .prompts import WILDGUARD_INPUT_FORMAT
 from .interface import SafetyChatInterface
 
-All = [MockOpenAI, MockOpenAIStream, ModelClientHandler, SafetyChatInterface, WILDGUARD_INPUT_FORMAT]
+All = [MockOpenAI, MockOpenAIStream, ModelClientHandler, SafetyChatInterface, WILDGUARD_INPUT_FORMAT, run_dummy_safety_filter]
