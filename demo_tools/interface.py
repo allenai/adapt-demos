@@ -453,7 +453,7 @@ class SafetyChatInterface(Blocks):
                     .then(
                         submit_fn,
                         [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
-                        [self.chatbot, self.chatbot_state_2],
+                        [self.chatbot_2, self.chatbot_state_2],
                         show_api=False,
                         concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                         show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
@@ -509,6 +509,7 @@ class SafetyChatInterface(Blocks):
                     show_api=False,
                     queue=False,
                 )
+            ######### ######### ######### ######### ########
             else:
                 self.undo_btn.click(
                     self._delete_prev_fn,
@@ -525,6 +526,17 @@ class SafetyChatInterface(Blocks):
                 )
 
         if self.clear_btn:
+            ######### ######### ######### ######### #########
+            if self.side_by_side:
+                self.clear_btn.click(
+                    async_lambda(lambda: ([], [], None)),
+                    None,
+                    [self.chatbot_2, self.chatbot_state_2, self.saved_input],
+                    queue=False,
+                    show_api=False,
+                )
+
+            ######### ######### ######### ######### #########
             self.clear_btn.click(
                 async_lambda(lambda: ([], [], None)),
                 None,
