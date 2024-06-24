@@ -123,8 +123,8 @@ demo = SafetyChatInterface(
     run_safety_filter,
     additional_inputs=[temperature_slider, safety_filter_checkbox],
     title="AI2 Internal Demo Model",
-    description=f"""Model: {args.model} 
-                            
+    description=f"""Model: {args.model}
+
                             Safety Model: {args.safety_model}""",
 )
 
