@@ -147,7 +147,7 @@ class SafetyChatInterface(Blocks):
         self.safety_fn = safety_fn
         self.is_async = inspect.iscoroutinefunction(self.fn) or inspect.isasyncgenfunction(self.fn)
         self.is_generator = inspect.isgeneratorfunction(self.fn) or inspect.isasyncgenfunction(self.fn)
-        self.buttons: list[Button | None] = []            
+        self.buttons: list[Button | None] = []
 
         self.examples = examples
         self.cache_examples = cache_examples
@@ -308,7 +308,7 @@ class SafetyChatInterface(Blocks):
                 # TODO add things like this
                 if self.side_by_side:
                     raise ValueError("Examples are not supported in side-by-side mode.")
-                
+
                 self.examples_handler = Examples(
                     examples=examples,
                     inputs=[self.textbox] + self.additional_inputs,
@@ -333,7 +333,7 @@ class SafetyChatInterface(Blocks):
             self.saved_input = State()
             self.chatbot_state = State(self.chatbot.value) if self.chatbot.value else State([])
             self.chatbot_state_2 = State(self.chatbot_2.value) if self.chatbot_2.value else State([])
-            
+
             self.show_progress = show_progress
             self._setup_events()
             self._setup_api()
@@ -380,7 +380,8 @@ class SafetyChatInterface(Blocks):
                     [self.chatbot_2, self.chatbot_state_2],
                     show_api=False,
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
-                    show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),                )
+                    show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
+                )
                 .then(
                     self.safety_fn,
                     [self.saved_input, self.chatbot_state] + self.additional_inputs,
@@ -485,7 +486,7 @@ class SafetyChatInterface(Blocks):
                     )
                 )
             self._setup_stop_events([self.retry_btn.click], retry_event)
-        
+
         if self.undo_btn:
             ######### ######### ######### ######### #########
             if self.side_by_side:
