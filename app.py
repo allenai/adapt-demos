@@ -17,7 +17,7 @@ import argparse
 import gradio as gr
 from openai import OpenAI
 
-from src.dummy_chatbot import MockOpenAI
+from src.dummy_chatbot import MockOpenAI, MockOpenAIStream
 from src.interface import SafetyChatInterface
 from src.prompts import WILDGUARD_INPUT_FORMAT
 
@@ -39,7 +39,7 @@ model_url = f"http://localhost:{args.port}/v1"  # Construct base URL with provid
 
 if args.debug:
     # Use mock client for debugging
-    model_client = MockOpenAI()
+    model_client = MockOpenAIStream()
 else:
     model_client = OpenAI(api_key=api_key, base_url=model_url)
 
@@ -50,7 +50,7 @@ if args.safety_filter_port or args.safety_model:
     safety_url = f"http://localhost:{args.safety_filter_port}/v1"  # Construct base URL with provided port
     if args.debug:
         # Use mock client for debugging
-        safety_client = MockOpenAI(safety=True)
+        safety_client = MockOpenAI()
     else:
         safety_client = OpenAI(api_key=api_key, base_url=safety_url)
     SAFETY_FILTER_ON = True
@@ -115,7 +115,6 @@ if SAFETY_FILTER_ON:
             temperature=temperature,
             stream=False,
         )
-        import ipdb; ipdb.set_trace()
         return """### Safety info: \n""" + safety_response.choices[0].message.content.replace("yes", "yes\n").replace(
             "no", "no\n"
         )

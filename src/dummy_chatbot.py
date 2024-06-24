@@ -14,32 +14,35 @@
 
 import time
 
+
 class ChoiceDelta:
-    def __init__(self, content):
-        self.content = content
+    def __init__(self, delta):
+        self.delta = delta
+
 
 class Message:
     def __init__(self, content):
         self.content = content
 
+
 class Choice:
-    def __init__(self, delta):
-        self.delta = delta
+    def __init__(self, message):
+        self.message = message
+
 
 class CompletionResponse:
     def __init__(self, choices):
         self.choices = choices
 
 
-class MockOpenAI:
-    def __init__(self, safety=False, delay=0.001, force_no_stream=False):
+class MockOpenAIStream:
+    def __init__(self, delay=0.001):
         """
         Initialize the mock client with an optional delay to simulate network latency.
         :param delay: Time in seconds to wait before sending each part of the message.
         :param safety: Whether the client is for a safety model
         """
         self.delay = delay
-        self.safety = safety
 
     @property
     def chat(self):
@@ -55,7 +58,7 @@ class MockOpenAI:
         """
         return self
 
-    def create(self, model, messages, temperature, stream=False):
+    def create(self, model, messages, temperature, stream):
         """
         Simulate the behavior of the OpenAI API completion request.
         :param model: the model name (ignored in mock)
@@ -64,17 +67,48 @@ class MockOpenAI:
         :param stream: whether the response should be streamed
         :return: Generator yielding parts of a completion
         """
-        if self.safety:
-            mock_response_parts = ["Harmful request: no", "Response refusal: no", "Harmful response: no"]
-        else:
-            mock_response_parts = ["Hmmm, ", "I have to ", "think about that!"]
+        mock_response_parts = ["Hmmm, ", "I have to ", "think about that!"]
 
-        if stream:
-            print("Streaming response")
-            for part in mock_response_parts:
-                time.sleep(self.delay)  # Simulate delay
-                yield CompletionResponse([Choice(ChoiceDelta(part))])
-        else:
-            print("Non-streaming response")
-            full_message = ''.join(mock_response_parts)
-            return CompletionResponse([Choice(Message(full_message))])
+        print("Streaming response")
+        for part in mock_response_parts:
+            time.sleep(self.delay)  # Simulate delay
+            yield CompletionResponse([ChoiceDelta(Message(part))])
+
+
+class MockOpenAI:
+    def __init__(self, delay=0.001):
+        """
+        Initialize the mock client with an optional delay to simulate network latency.
+        :param delay: Time in seconds to wait before sending each part of the message.
+        :param safety: Whether the client is for a safety model
+        """
+        self.delay = delay
+
+    @property
+    def chat(self):
+        """
+        Returns a reference to the mock chat interface where you can access completions.
+        """
+        return self
+
+    @property
+    def completions(self):
+        """
+        Allows accessing create to simulate obtaining completions.
+        """
+        return self
+
+    def create(self, model, messages, temperature, stream):
+        """
+        Simulate the behavior of the OpenAI API completion request.
+        :param model: the model name (ignored in mock)
+        :param messages: the list of messages (ignored in mock)
+        :param temperature: randomness of the response (ignored in mock)
+        :param stream: whether the response should be streamed
+        :return: Generator yielding parts of a completion
+        """
+        mock_response_parts = ["Harmful request: no", "Response refusal: no", "Harmful response: no"]
+
+        print("Non-streaming response")
+        full_message = "".join(mock_response_parts)
+        return CompletionResponse([Choice(Message(full_message))])
