@@ -12,9 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .dummy_chatbot import MockOpenAIStream, MockOpenAI
+from .dummy_chatbot import MockOpenAI, MockOpenAIStream
+from .interface import SafetyChatInterface
 from .model_client import ModelClientHandler, run_dummy_safety_filter
 from .prompts import WILDGUARD_INPUT_FORMAT
-from .interface import SafetyChatInterface
 
-All = [MockOpenAI, MockOpenAIStream, ModelClientHandler, SafetyChatInterface, WILDGUARD_INPUT_FORMAT, run_dummy_safety_filter]
+All = [
+    MockOpenAI,
+    MockOpenAIStream,
+    ModelClientHandler,
+    SafetyChatInterface,
+    WILDGUARD_INPUT_FORMAT,
+    run_dummy_safety_filter,
+]

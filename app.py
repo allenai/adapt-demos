@@ -15,9 +15,12 @@
 import argparse
 
 import gradio as gr
-from openai import OpenAI
 
-from demo_tools import MockOpenAI, MockOpenAIStream, SafetyChatInterface, WILDGUARD_INPUT_FORMAT, ModelClientHandler, run_dummy_safety_filter
+from demo_tools import (
+    ModelClientHandler,
+    SafetyChatInterface,
+    run_dummy_safety_filter,
+)
 
 # Define an argument parser
 parser = argparse.ArgumentParser(description="Gradio App with Custom OpenAI API Port")

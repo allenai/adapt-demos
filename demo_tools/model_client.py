@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from openai import OpenAI
-from .dummy_chatbot import MockOpenAIStream, MockOpenAI
+
+from .dummy_chatbot import MockOpenAI, MockOpenAIStream
 from .prompts import WILDGUARD_INPUT_FORMAT
+
 
 def run_dummy_safety_filter(message, history, temperature, safety_filter_checkbox):
     return "Safety filter not enabled"
