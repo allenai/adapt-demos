@@ -1,4 +1,4 @@
 [flake8]
 exclude = 
-    src/interface.py
-    src/prompts.py
+    demo_tools/interface.py
+    demo_tools/prompts.py
