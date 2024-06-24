@@ -35,7 +35,7 @@ class CompletionResponse:
         self.choices = choices
 
 
-class MockOpenAIStream:
+class MockClient:
     def __init__(self, delay=0.001):
         """
         Initialize the mock client with an optional delay to simulate network latency.
@@ -57,6 +57,15 @@ class MockOpenAIStream:
         Allows accessing create to simulate obtaining completions.
         """
         return self
+
+class MockOpenAIStream(MockClient):
+    def __init__(self, delay=0.001):
+        """
+        Initialize the mock client with an optional delay to simulate network latency.
+        :param delay: Time in seconds to wait before sending each part of the message.
+        :param safety: Whether the client is for a safety model
+        """
+        super().__init__(delay)
 
     def create(self, model, messages, temperature, stream):
         """
@@ -75,29 +84,15 @@ class MockOpenAIStream:
             yield CompletionResponse([ChoiceDelta(Message(part))])
 
 
-class MockOpenAI:
+class MockOpenAI(MockClient):
     def __init__(self, delay=0.001):
-        """
-        Initialize the mock client with an optional delay to simulate network latency.
-        :param delay: Time in seconds to wait before sending each part of the message.
-        :param safety: Whether the client is for a safety model
-        """
-        self.delay = delay
-
-    @property
-    def chat(self):
-        """
-        Returns a reference to the mock chat interface where you can access completions.
-        """
-        return self
-
-    @property
-    def completions(self):
-        """
-        Allows accessing create to simulate obtaining completions.
-        """
-        return self
-
+            """
+            Initialize the mock client with an optional delay to simulate network latency.
+            :param delay: Time in seconds to wait before sending each part of the message.
+            :param safety: Whether the client is for a safety model
+            """
+            super().__init__(delay)
+            
     def create(self, model, messages, temperature, stream):
         """
         Simulate the behavior of the OpenAI API completion request.
