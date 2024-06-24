@@ -1,3 +1,17 @@
+# Copyright 2024 AllenAI. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # modified from https://github.com/gradio-app/gradio/blob/main/gradio/chat_interface.py
 # added the inference of the safety filter after completion of the chatbot
 # TODO in the future, will want to add code that hides text until classified as safe
@@ -12,8 +26,6 @@ import inspect
 from typing import AsyncGenerator, Callable, Literal, Union, cast
 
 import anyio
-from gradio_client.documentation import document
-
 from gradio.blocks import Blocks
 from gradio.components import (
     Button,
@@ -28,10 +40,11 @@ from gradio.components import (
 from gradio.events import Dependency, on
 from gradio.helpers import create_examples as Examples  # noqa: N812
 from gradio.helpers import special_args
-from gradio.layouts import Accordion, Group, Row, Column
+from gradio.layouts import Accordion, Column, Group, Row
 from gradio.routes import Request
 from gradio.themes import ThemeClass as Theme
 from gradio.utils import SyncToAsyncIterator, async_iteration, async_lambda
+from gradio_client.documentation import document
 
 
 @document()
@@ -131,12 +144,8 @@ class SafetyChatInterface(Blocks):
         self.concurrency_limit = concurrency_limit
         self.fn = fn
         self.safety_fn = safety_fn
-        self.is_async = inspect.iscoroutinefunction(
-            self.fn
-        ) or inspect.isasyncgenfunction(self.fn)
-        self.is_generator = inspect.isgeneratorfunction(
-            self.fn
-        ) or inspect.isasyncgenfunction(self.fn)
+        self.is_async = inspect.iscoroutinefunction(self.fn) or inspect.isasyncgenfunction(self.fn)
+        self.is_generator = inspect.isgeneratorfunction(self.fn) or inspect.isasyncgenfunction(self.fn)
         self.buttons: list[Button | None] = []
 
         self.examples = examples
@@ -145,33 +154,24 @@ class SafetyChatInterface(Blocks):
         if additional_inputs:
             if not isinstance(additional_inputs, list):
                 additional_inputs = [additional_inputs]
-            self.additional_inputs = [
-                get_component_instance(i)
-                for i in additional_inputs  # type: ignore
-            ]
+            self.additional_inputs = [get_component_instance(i) for i in additional_inputs]  # type: ignore
         else:
             self.additional_inputs = []
         if additional_inputs_accordion_name is not None:
             print(
                 "The `additional_inputs_accordion_name` parameter is deprecated and will be removed in a future version of Gradio. Use the `additional_inputs_accordion` parameter instead."
             )
-            self.additional_inputs_accordion_params = {
-                "label": additional_inputs_accordion_name
-            }
+            self.additional_inputs_accordion_params = {"label": additional_inputs_accordion_name}
         if additional_inputs_accordion is None:
             self.additional_inputs_accordion_params = {
                 "label": "Additional Inputs",
                 "open": False,
             }
         elif isinstance(additional_inputs_accordion, str):
-            self.additional_inputs_accordion_params = {
-                "label": additional_inputs_accordion
-            }
+            self.additional_inputs_accordion_params = {"label": additional_inputs_accordion}
         elif isinstance(additional_inputs_accordion, Accordion):
-            self.additional_inputs_accordion_params = (
-                additional_inputs_accordion.recover_kwargs(
-                    additional_inputs_accordion.get_config()
-                )
+            self.additional_inputs_accordion_params = additional_inputs_accordion.recover_kwargs(
+                additional_inputs_accordion.get_config()
             )
         else:
             raise ValueError(
@@ -182,9 +182,7 @@ class SafetyChatInterface(Blocks):
             with Row():
                 with Column(scale=3):
                     if title:
-                        Markdown(
-                            f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>" # removed text-align: center; 
-                        )
+                        Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
                     if description:
                         Markdown(description)
                 with Column(scale=2):
@@ -193,9 +191,7 @@ class SafetyChatInterface(Blocks):
             if chatbot:
                 self.chatbot = chatbot.render()
             else:
-                self.chatbot = Chatbot(
-                    label="Chatbot", scale=1, height=200 if fill_height else None
-                )
+                self.chatbot = Chatbot(label="Chatbot", scale=1, height=200 if fill_height else None)
 
             with Row():
                 for btn in [retry_btn, undo_btn, clear_btn]:
@@ -203,9 +199,7 @@ class SafetyChatInterface(Blocks):
                         if isinstance(btn, Button):
                             btn.render()
                         elif isinstance(btn, str):
-                            btn = Button(
-                                btn, variant="secondary", size="sm", min_width=60
-                            )
+                            btn = Button(btn, variant="secondary", size="sm", min_width=60)
                         else:
                             raise ValueError(
                                 f"All the _btn parameters must be a gr.Button, string, or None, not {type(btn)}"
@@ -275,7 +269,7 @@ class SafetyChatInterface(Blocks):
                                 f"The stop_btn parameter must be a gr.Button, string, or None, not {type(stop_btn)}"
                             )
                     self.buttons.extend([submit_btn, stop_btn])  # type: ignore
-                    
+
                 self.fake_api_btn = Button("Fake API", visible=False)
                 self.fake_response_textbox = Textbox(label="Response", visible=False)
                 (
@@ -285,7 +279,7 @@ class SafetyChatInterface(Blocks):
                     self.submit_btn,
                     self.stop_btn,
                 ) = self.buttons
-            
+
             if examples:
                 if self.is_generator:
                     examples_fn = self._examples_stream_fn
@@ -302,34 +296,26 @@ class SafetyChatInterface(Blocks):
                     examples_per_page=examples_per_page,
                 )
 
-            any_unrendered_inputs = any(
-                not inp.is_rendered for inp in self.additional_inputs
-            )
+            any_unrendered_inputs = any(not inp.is_rendered for inp in self.additional_inputs)
             if self.additional_inputs and any_unrendered_inputs:
                 with Accordion(**self.additional_inputs_accordion_params):  # type: ignore
                     for input_component in self.additional_inputs:
                         if not input_component.is_rendered:
-                            input_component.render()                
+                            input_component.render()
 
             # The example caching must happen after the input components have rendered
             if examples:
                 self.examples_handler._start_caching()
 
             self.saved_input = State()
-            self.chatbot_state = (
-                State(self.chatbot.value) if self.chatbot.value else State([])
-            )
+            self.chatbot_state = State(self.chatbot.value) if self.chatbot.value else State([])
             self.show_progress = show_progress
             self._setup_events()
             self._setup_api()
 
     def _setup_events(self) -> None:
         submit_fn = self._stream_fn if self.is_generator else self._submit_fn
-        submit_triggers = (
-            [self.textbox.submit, self.submit_btn.click]
-            if self.submit_btn
-            else [self.textbox.submit]
-        )
+        submit_triggers = [self.textbox.submit, self.submit_btn.click] if self.submit_btn else [self.textbox.submit]
         submit_event = (
             on(
                 submit_triggers,
@@ -351,19 +337,14 @@ class SafetyChatInterface(Blocks):
                 [self.saved_input, self.chatbot_state] + self.additional_inputs,
                 [self.chatbot, self.chatbot_state],
                 show_api=False,
-                concurrency_limit=cast(
-                    Union[int, Literal["default"], None], self.concurrency_limit
-                ),
-                show_progress=cast(
-                    Literal["full", "minimal", "hidden"], self.show_progress
-                ),
-            ).then(
+                concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
+            )
+            .then(
                 self.safety_fn,
                 [self.saved_input, self.chatbot_state] + self.additional_inputs,
                 [self.safety_log],
-                                concurrency_limit=cast(
-                    Union[int, Literal["default"], None], self.concurrency_limit
-                ),
+                concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
             )
         )
         self._setup_stop_events(submit_triggers, submit_event)
@@ -389,12 +370,8 @@ class SafetyChatInterface(Blocks):
                     [self.saved_input, self.chatbot_state] + self.additional_inputs,
                     [self.chatbot, self.chatbot_state],
                     show_api=False,
-                    concurrency_limit=cast(
-                        Union[int, Literal["default"], None], self.concurrency_limit
-                    ),
-                    show_progress=cast(
-                        Literal["full", "minimal", "hidden"], self.show_progress
-                    ),
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                    show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                 )
             )
             self._setup_stop_events([self.retry_btn.click], retry_event)
@@ -423,9 +400,7 @@ class SafetyChatInterface(Blocks):
                 show_api=False,
             )
 
-    def _setup_stop_events(
-        self, event_triggers: list[Callable], event_to_cancel: Dependency
-    ) -> None:
+    def _setup_stop_events(self, event_triggers: list[Callable], event_to_cancel: Dependency) -> None:
         if self.stop_btn and self.is_generator:
             if self.submit_btn:
                 for event_trigger in event_triggers:
@@ -491,6 +466,7 @@ class SafetyChatInterface(Blocks):
                     yield None, history + [[message, None]]
                 async for response in generator:
                     yield response, history + [[message, response]]
+
         else:
 
             @functools.wraps(self.fn)
@@ -509,9 +485,7 @@ class SafetyChatInterface(Blocks):
             [self.textbox, self.chatbot_state] + self.additional_inputs,
             [self.textbox, self.chatbot_state],
             api_name="chat",
-            concurrency_limit=cast(
-                Union[int, Literal["default"], None], self.concurrency_limit
-            ),
+            concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
         )
 
     def _clear_and_save_textbox(self, message: str) -> tuple[str | dict, str]:
@@ -552,24 +526,16 @@ class SafetyChatInterface(Blocks):
         *args,
     ) -> tuple[list[list[str | tuple | None]], list[list[str | tuple | None]]]:
         if self.multimodal and isinstance(message, dict):
-            remove_input = (
-                len(message["files"]) + 1
-                if message["text"] is not None
-                else len(message["files"])
-            )
+            remove_input = len(message["files"]) + 1 if message["text"] is not None else len(message["files"])
             history = history_with_input[:-remove_input]
         else:
             history = history_with_input[:-1]
-        inputs, _, _ = special_args(
-            self.fn, inputs=[message, history, *args], request=request
-        )
+        inputs, _, _ = special_args(self.fn, inputs=[message, history, *args], request=request)
 
         if self.is_async:
             response = await self.fn(*inputs)
         else:
-            response = await anyio.to_thread.run_sync(
-                self.fn, *inputs, limiter=self.limiter
-            )
+            response = await anyio.to_thread.run_sync(self.fn, *inputs, limiter=self.limiter)
 
         if self.multimodal and isinstance(message, dict):
             self._append_multimodal_history(message, response, history)
@@ -585,24 +551,16 @@ class SafetyChatInterface(Blocks):
         *args,
     ) -> AsyncGenerator:
         if self.multimodal and isinstance(message, dict):
-            remove_input = (
-                len(message["files"]) + 1
-                if message["text"] is not None
-                else len(message["files"])
-            )
+            remove_input = len(message["files"]) + 1 if message["text"] is not None else len(message["files"])
             history = history_with_input[:-remove_input]
         else:
             history = history_with_input[:-1]
-        inputs, _, _ = special_args(
-            self.fn, inputs=[message, history, *args], request=request
-        )
+        inputs, _, _ = special_args(self.fn, inputs=[message, history, *args], request=request)
 
         if self.is_async:
             generator = self.fn(*inputs)
         else:
-            generator = await anyio.to_thread.run_sync(
-                self.fn, *inputs, limiter=self.limiter
-            )
+            generator = await anyio.to_thread.run_sync(self.fn, *inputs, limiter=self.limiter)
             generator = SyncToAsyncIterator(generator, self.limiter)
         try:
             first_response = await async_iteration(generator)
@@ -635,9 +593,7 @@ class SafetyChatInterface(Blocks):
         if self.is_async:
             response = await self.fn(*inputs)
         else:
-            response = await anyio.to_thread.run_sync(
-                self.fn, *inputs, limiter=self.limiter
-            )
+            response = await anyio.to_thread.run_sync(self.fn, *inputs, limiter=self.limiter)
         return [[message, response]]
 
     async def _examples_stream_fn(
@@ -650,9 +606,7 @@ class SafetyChatInterface(Blocks):
         if self.is_async:
             generator = self.fn(*inputs)
         else:
-            generator = await anyio.to_thread.run_sync(
-                self.fn, *inputs, limiter=self.limiter
-            )
+            generator = await anyio.to_thread.run_sync(self.fn, *inputs, limiter=self.limiter)
             generator = SyncToAsyncIterator(generator, self.limiter)
         async for response in generator:
             yield [[message, response]]
@@ -667,11 +621,7 @@ class SafetyChatInterface(Blocks):
         list[list[str | tuple | None]],
     ]:
         if self.multimodal and isinstance(message, dict):
-            remove_input = (
-                len(message["files"]) + 1
-                if message["text"] is not None
-                else len(message["files"])
-            )
+            remove_input = len(message["files"]) + 1 if message["text"] is not None else len(message["files"])
             history = history[:-remove_input]
         else:
             history = history[:-1]
