@@ -17,14 +17,16 @@ import argparse
 import gradio as gr
 from openai import OpenAI
 
+from src.dummy_chatbot import MockOpenAI
 from src.interface import SafetyChatInterface
 from src.prompts import WILDGUARD_INPUT_FORMAT
 
 # Define an argument parser
 parser = argparse.ArgumentParser(description="Gradio App with Custom OpenAI API Port")
+parser.add_argument("--debug", action="store_true", default=False, help="Enable debug mode (does not ping models)")
 parser.add_argument("--port", type=int, default=8000, help="Port to connect to OpenAI API server")
 parser.add_argument(
-    "--safety_filter_port", type=int, required=False, default=8001, help="Port to connect to safety filter server"
+    "--safety_filter_port", type=int, required=False, default=None, help="Port to connect to safety filter server"
 )
 parser.add_argument("--model", type=str, required=True, help="Model to connect to")
 parser.add_argument("--safety_model", type=str, required=False, help="Safety model to connect to")
@@ -34,14 +36,23 @@ args = parser.parse_args()
 # OpenAI configuration
 api_key = "EMPTY"  # OpenAI API key (empty for custom server)
 model_url = f"http://localhost:{args.port}/v1"  # Construct base URL with provided port
-model_client = OpenAI(api_key=api_key, base_url=model_url)
+
+if args.debug:
+    # Use mock client for debugging
+    model_client = MockOpenAI()
+else:
+    model_client = OpenAI(api_key=api_key, base_url=model_url)
 
 if args.safety_filter_port or args.safety_model:
     # if one of them, both need to be set
     if not args.safety_filter_port or not args.safety_model:
         raise ValueError("Both safety filter port and safety model need to be set")
     safety_url = f"http://localhost:{args.safety_filter_port}/v1"  # Construct base URL with provided port
-    safety_client = OpenAI(api_key=api_key, base_url=safety_url)
+    if args.debug:
+        # Use mock client for debugging
+        safety_client = MockOpenAI(safety=True)
+    else:
+        safety_client = OpenAI(api_key=api_key, base_url=safety_url)
     SAFETY_FILTER_ON = True
 else:
     SAFETY_FILTER_ON = False
@@ -104,13 +115,14 @@ if SAFETY_FILTER_ON:
             temperature=temperature,
             stream=False,
         )
+        import ipdb; ipdb.set_trace()
         return """### Safety info: \n""" + safety_response.choices[0].message.content.replace("yes", "yes\n").replace(
             "no", "no\n"
         )
 
 else:
-
-    def run_safety_filter(message, history, temperature):
+    # placeholder for when off
+    def run_safety_filter(message, history, temperature, safety_filter_checkbox):
         return "Safety filter not enabled"
 
 
