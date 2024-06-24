@@ -36,15 +36,12 @@ args = parser.parse_args()
 
 # OpenAI configuration
 api_key = "EMPTY"  # OpenAI API key (empty for custom server)
-model_url = f"http://localhost:{args.port}/v1"  # Construct base URL with provided port
-
 model_client = ModelClientHandler(args.model, api_key, args.port, debug=args.debug, stream=True)
 
 if args.safety_filter_port or args.safety_model:
     # if one of them, both need to be set
     if not args.safety_filter_port or not args.safety_model:
         raise ValueError("Both safety filter port and safety model need to be set")
-    safety_url = f"http://localhost:{args.safety_filter_port}/v1"  # Construct base URL with provided port
     safety_client = ModelClientHandler(args.safety_model, api_key, args.port, debug=args.debug, stream=False)
     SAFETY_FILTER_ON = True
 else:

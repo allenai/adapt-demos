@@ -72,6 +72,7 @@ class SafetyChatInterface(Blocks):
         fn: Callable,
         safety_fn: Callable,
         *,
+        fn_2: Callable | None = None,
         multimodal: bool = False,
         chatbot: Chatbot | None = None,
         textbox: Textbox | MultimodalTextbox | None = None,
@@ -146,7 +147,7 @@ class SafetyChatInterface(Blocks):
         self.safety_fn = safety_fn
         self.is_async = inspect.iscoroutinefunction(self.fn) or inspect.isasyncgenfunction(self.fn)
         self.is_generator = inspect.isgeneratorfunction(self.fn) or inspect.isasyncgenfunction(self.fn)
-        self.buttons: list[Button | None] = []
+        self.buttons: list[Button | None] = []            
 
         self.examples = examples
         self.cache_examples = cache_examples
@@ -178,6 +179,15 @@ class SafetyChatInterface(Blocks):
                 f"The `additional_inputs_accordion` parameter must be a string or gr.Accordion, not {type(additional_inputs_accordion)}"
             )
 
+        ##### MODIFIED FOR SIDE-BY-SIDE
+        self.fn_2 = fn_2
+        if self.fn_2:
+            self.side_by_side = True
+            self.is_async_2 = inspect.iscoroutinefunction(self.fn_2) or inspect.isasyncgenfunction(self.fn_2)
+        else:
+            self.side_by_side = False
+        ##############################
+
         with self:
             with Row():
                 with Column(scale=3):
@@ -188,10 +198,19 @@ class SafetyChatInterface(Blocks):
                 with Column(scale=2):
                     self.safety_log = Markdown("Safety content to appear here")
 
-            if chatbot:
-                self.chatbot = chatbot.render()
+            ##############################
+            if self.side_by_side:
+                with Row():
+                    with Column():
+                        self.chatbot = Chatbot(label="Chatbot", scale=1, height=600 if fill_height else None)
+                    with Column():
+                        self.chatbot_2 = Chatbot(label="Chatbot 2", scale=1, height=600 if fill_height else None)
+            ##############################
             else:
-                self.chatbot = Chatbot(label="Chatbot", scale=1, height=200 if fill_height else None)
+                if chatbot:
+                    self.chatbot = chatbot.render()
+                else:
+                    self.chatbot = Chatbot(label="Chatbot", scale=1, height=200 if fill_height else None)
 
             with Row():
                 for btn in [retry_btn, undo_btn, clear_btn]:
@@ -286,6 +305,10 @@ class SafetyChatInterface(Blocks):
                 else:
                     examples_fn = self._examples_fn
 
+                # TODO add things like this
+                if self.side_by_side:
+                    raise ValueError("Examples are not supported in side-by-side mode.")
+                
                 self.examples_handler = Examples(
                     examples=examples,
                     inputs=[self.textbox] + self.additional_inputs,
@@ -309,6 +332,8 @@ class SafetyChatInterface(Blocks):
 
             self.saved_input = State()
             self.chatbot_state = State(self.chatbot.value) if self.chatbot.value else State([])
+            self.chatbot_state_2 = State(self.chatbot_2.value) if self.chatbot_2.value else State([])
+            
             self.show_progress = show_progress
             self._setup_events()
             self._setup_api()
@@ -316,45 +341,61 @@ class SafetyChatInterface(Blocks):
     def _setup_events(self) -> None:
         submit_fn = self._stream_fn if self.is_generator else self._submit_fn
         submit_triggers = [self.textbox.submit, self.submit_btn.click] if self.submit_btn else [self.textbox.submit]
-        submit_event = (
-            on(
-                submit_triggers,
-                self._clear_and_save_textbox,
-                [self.textbox],
-                [self.textbox, self.saved_input],
-                show_api=False,
-                queue=False,
-            )
-            .then(
-                self._display_input,
-                [self.saved_input, self.chatbot_state],
-                [self.chatbot, self.chatbot_state],
-                show_api=False,
-                queue=False,
-            )
-            .then(
-                submit_fn,
-                [self.saved_input, self.chatbot_state] + self.additional_inputs,
-                [self.chatbot, self.chatbot_state],
-                show_api=False,
-                concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
-                show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
-            )
-            .then(
-                self.safety_fn,
-                [self.saved_input, self.chatbot_state] + self.additional_inputs,
-                [self.safety_log],
-                concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
-            )
-        )
-        self._setup_stop_events(submit_triggers, submit_event)
-
-        if self.retry_btn:
-            retry_event = (
-                self.retry_btn.click(
-                    self._delete_prev_fn,
+        ######### ######### ######### ######### #########
+        if self.side_by_side:
+            submit_event = (
+                on(
+                    submit_triggers,
+                    self._clear_and_save_textbox,
+                    [self.textbox],
+                    [self.textbox, self.saved_input],
+                    show_api=False,
+                    queue=False,
+                )
+                .then(
+                    self._display_input,
                     [self.saved_input, self.chatbot_state],
-                    [self.chatbot, self.saved_input, self.chatbot_state],
+                    [self.chatbot, self.chatbot_state],
+                    show_api=False,
+                    queue=False,
+                )
+                .then(
+                    self._display_input,
+                    [self.saved_input, self.chatbot_state_2],
+                    [self.chatbot, self.chatbot_state_2],
+                    show_api=False,
+                    queue=False,
+                )
+                .then(
+                    submit_fn,
+                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.chatbot, self.chatbot_state],
+                    show_api=False,
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                    show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
+                )
+                .then(
+                    submit_fn,
+                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.chatbot_2, self.chatbot_state_2],
+                    show_api=False,
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                    show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),                )
+                .then(
+                    self.safety_fn,
+                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.safety_log],
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                )
+            )
+        #################################
+        else:
+            submit_event = (
+                on(
+                    submit_triggers,
+                    self._clear_and_save_textbox,
+                    [self.textbox],
+                    [self.textbox, self.saved_input],
                     show_api=False,
                     queue=False,
                 )
@@ -373,23 +414,114 @@ class SafetyChatInterface(Blocks):
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                     show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                 )
+                .then(
+                    self.safety_fn,
+                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.safety_log],
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                )
             )
-            self._setup_stop_events([self.retry_btn.click], retry_event)
+        self._setup_stop_events(submit_triggers, submit_event)
 
+        if self.retry_btn:
+            ######### ######### ######### ######### #########
+            if self.side_by_side:
+                retry_event = (
+                    self.retry_btn.click(
+                        self._delete_prev_fn,
+                        [self.saved_input, self.chatbot_state],
+                        [self.chatbot, self.saved_input, self.chatbot_state],
+                        show_api=False,
+                        queue=False,
+                    )
+                    .then(
+                        self._display_input,
+                        [self.saved_input, self.chatbot_state],
+                        [self.chatbot, self.chatbot_state],
+                        show_api=False,
+                        queue=False,
+                    )
+                    .then(
+                        submit_fn,
+                        [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                        [self.chatbot, self.chatbot_state],
+                        show_api=False,
+                        concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                        show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
+                    )
+                    .then(
+                        submit_fn,
+                        [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
+                        [self.chatbot, self.chatbot_state_2],
+                        show_api=False,
+                        concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                        show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
+                    )
+                )
+            ######### ######### ######### ######### #########
+            else:
+                retry_event = (
+                    self.retry_btn.click(
+                        self._delete_prev_fn,
+                        [self.saved_input, self.chatbot_state],
+                        [self.chatbot, self.saved_input, self.chatbot_state],
+                        show_api=False,
+                        queue=False,
+                    )
+                    .then(
+                        self._display_input,
+                        [self.saved_input, self.chatbot_state],
+                        [self.chatbot, self.chatbot_state],
+                        show_api=False,
+                        queue=False,
+                    )
+                    .then(
+                        submit_fn,
+                        [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                        [self.chatbot, self.chatbot_state],
+                        show_api=False,
+                        concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                        show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
+                    )
+                )
+            self._setup_stop_events([self.retry_btn.click], retry_event)
+        
         if self.undo_btn:
-            self.undo_btn.click(
-                self._delete_prev_fn,
-                [self.saved_input, self.chatbot_state],
-                [self.chatbot, self.saved_input, self.chatbot_state],
-                show_api=False,
-                queue=False,
-            ).then(
-                async_lambda(lambda x: x),
-                [self.saved_input],
-                [self.textbox],
-                show_api=False,
-                queue=False,
-            )
+            ######### ######### ######### ######### #########
+            if self.side_by_side:
+                self.undo_btn.click(
+                    self._delete_prev_fn,
+                    [self.saved_input, self.chatbot_state],
+                    [self.chatbot, self.saved_input, self.chatbot_state],
+                    show_api=False,
+                    queue=False,
+                ).then(
+                    self._delete_prev_fn,
+                    [self.saved_input, self.chatbot_state_2],
+                    [self.chatbot_2, self.saved_input, self.chatbot_state_2],
+                    show_api=False,
+                    queue=False,
+                ).then(
+                    async_lambda(lambda x: x),
+                    [self.saved_input],
+                    [self.textbox],
+                    show_api=False,
+                    queue=False,
+                )
+            else:
+                self.undo_btn.click(
+                    self._delete_prev_fn,
+                    [self.saved_input, self.chatbot_state],
+                    [self.chatbot, self.saved_input, self.chatbot_state],
+                    show_api=False,
+                    queue=False,
+                ).then(
+                    async_lambda(lambda x: x),
+                    [self.saved_input],
+                    [self.textbox],
+                    show_api=False,
+                    queue=False,
+                )
 
         if self.clear_btn:
             self.clear_btn.click(
