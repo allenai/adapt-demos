@@ -814,6 +814,7 @@ class EnhancedChatInterface(Blocks):
                 [],
             ],  # Making sure to add an empty list or lists for data compatibility
             "timestamp": timestamp,
+            "debug": debug_mode,
         }
 
         with open(file_path, "w") as f:
@@ -836,6 +837,7 @@ class EnhancedChatInterface(Blocks):
             "model_name_2": self.model_client_2.model,
             "conversation_2": chat_history_2,
             "timestamp": timestamp,
+            "debug": debug_mode,
         }
 
         with open(file_path, "w") as f:
