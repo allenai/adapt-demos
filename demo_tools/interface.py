@@ -482,6 +482,13 @@ class EnhancedChatInterface(Blocks):
                         concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                         show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                     )
+                    .then(
+                        self._save_dual_conversation,
+                        inputs=[self.chatbot_state, self.chatbot_state_2],
+                        outputs=[],
+                        show_api=False,
+                        concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                    )
                 )
             ######### ######### ######### ######### #########
             else:
@@ -507,6 +514,13 @@ class EnhancedChatInterface(Blocks):
                         show_api=False,
                         concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                         show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
+                    )
+                    .then(
+                        self._save_single_conversation,
+                        inputs=[self.chatbot_state],
+                        outputs=[],
+                        show_api=False,
+                        concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                     )
                 )
             self._setup_stop_events([self.retry_btn.click], retry_event)
