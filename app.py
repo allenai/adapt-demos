@@ -16,7 +16,11 @@ import argparse
 
 import gradio as gr
 
-from demo_tools import ModelClientHandler, SafetyChatInterface, run_dummy_safety_filter
+from demo_tools import (
+    EnhancedChatInterface,
+    ModelClientHandler,
+    run_dummy_safety_filter,
+)
 
 # Define an argument parser
 parser = argparse.ArgumentParser(description="Gradio App with Custom OpenAI API Port")
@@ -47,9 +51,10 @@ else:
 temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
 safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
 
-demo = SafetyChatInterface(
+demo = EnhancedChatInterface(
     model_client.predict,
     safety_client.predict_safety if SAFETY_FILTER_ON else run_dummy_safety_filter,
+    model_client,
     additional_inputs=[temperature_slider, safety_filter_checkbox],
     title="AI2 Internal Demo Model",
     description=f"""Model: {args.model}

@@ -1,3 +1,6 @@
+# Repo specific items
+user_data/
+
 # Ignore IDE and editor files
 .idea/
 .vscode/

@@ -26,6 +26,7 @@ class ModelClientHandler:
     def __init__(self, model, api_key, port, debug=False, stream=True):
         self.model_url = f"http://localhost:{port}/v1"
         self.model = model
+        self.debug = debug
         if debug:
             if stream:
                 # Use a mock client when debugging
