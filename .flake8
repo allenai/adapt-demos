@@ -1,0 +1,4 @@
+[flake8]
+exclude = 
+    demo_tools/interface.py
+    demo_tools/prompts.py

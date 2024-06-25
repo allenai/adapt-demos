@@ -1,13 +1,3 @@
----
-title: Chat Demo Example
-emoji: 📊
-colorFrom: gray
-colorTo: yellow
-sdk: gradio
-sdk_version: 4.27.0
-app_file: app.py
-pinned: false
----
 
 # OE Adapt Demo Tools
 
@@ -26,6 +16,16 @@ TLDR: We need to do vibe checks on the models we’re using. Here’s a document
 - [Exposing port with Beaker](https://beaker-docs.apps.allenai.org/interactive/configuration.html#exposing-ports)  --port 8000
 
 - [Gradio app we use](https://huggingface.co/spaces/ai2-adapt-dev/chat-demo-example) (please contribute improvements!)
+
+
+## Developing
+
+To develop in this library, first make a new Conda environement:
+```
+conda create -n chat_tools python=3.10
+```
+Next, install with editable mode.
+```
 
 
 ### TODO

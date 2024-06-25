@@ -16,45 +16,41 @@ import argparse
 
 import gradio as gr
 
-from demo_tools import ModelClientHandler, SafetyChatInterface, run_dummy_safety_filter
+from demo_tools import (
+    ModelClientHandler,
+    SafetyChatInterface,
+    run_dummy_safety_filter,
+)
 
 # Define an argument parser
 parser = argparse.ArgumentParser(description="Gradio App with Custom OpenAI API Port")
 parser.add_argument("--debug", action="store_true", default=False, help="Enable debug mode (does not ping models)")
-parser.add_argument("--port", type=int, default=8000, help="Port to connect to OpenAI API server")
-parser.add_argument(
-    "--safety_filter_port", type=int, required=False, default=None, help="Port to connect to safety filter server"
-)
-parser.add_argument("--model", type=str, required=True, help="Model to connect to")
-parser.add_argument("--safety_model", type=str, required=False, help="Safety model to connect to")
+parser.add_argument("--port_one", type=int, default=8000, help="Port to connect to OpenAI API server")
+parser.add_argument("--port_two", type=int, required=True, default=8001, help="Port to connect to second inference server")
+parser.add_argument("--model_one", type=str, required=True, help="Model to connect to")
+parser.add_argument("--model_two", type=str, required=False, help="Second model")
 parser.add_argument("--completion_mode", action="store_true", default=False, help="Use completion mode for OpenAI API")
 args = parser.parse_args()
 
 # OpenAI configuration
 api_key = "EMPTY"  # OpenAI API key (empty for custom server)
-model_client = ModelClientHandler(args.model, api_key, args.port, debug=args.debug, stream=True)
 
-if args.safety_filter_port or args.safety_model:
-    # if one of them, both need to be set
-    if not args.safety_filter_port or not args.safety_model:
-        raise ValueError("Both safety filter port and safety model need to be set")
-    safety_client = ModelClientHandler(args.safety_model, api_key, args.port, debug=args.debug, stream=False)
-    SAFETY_FILTER_ON = True
-else:
-    SAFETY_FILTER_ON = False
+model_client = ModelClientHandler(args.model_one, api_key, args.port_one, debug=args.debug, stream=True)
+model_client_2 = ModelClientHandler(args.model_two, api_key, args.port_two, debug=args.debug, stream=True)
 
 # Launch Gradio app
 temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
-safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
+safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=False)
 
 demo = SafetyChatInterface(
-    model_client.predict,
-    safety_client.predict_safety if SAFETY_FILTER_ON else run_dummy_safety_filter,
+    fn=model_client.predict,
+    safety_fn=run_dummy_safety_filter, # no safety filter on side-by-side demo
+    fn_2=model_client_2.predict,
     additional_inputs=[temperature_slider, safety_filter_checkbox],
     title="AI2 Internal Demo Model",
-    description=f"""Model: {args.model}
+    description=f"""Model 1 (left): {args.model_one}
 
-                            Safety Model: {args.safety_model}""",
+                            Model 2 (right): {args.model_two}""",
 )
 
 demo.queue().launch(share=True)
