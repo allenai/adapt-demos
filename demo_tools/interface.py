@@ -810,7 +810,9 @@ class EnhancedChatInterface(Blocks):
             "model_name": self.model_client.model,
             "conversation": chat_history,
             "model_name_2": None,  # No second model in this function
-            "conversation_2": [[]],  # Making sure to add an empty list or lists for data compatibility
+            "conversation_2": [
+                [],
+            ],  # Making sure to add an empty list or lists for data compatibility
             "timestamp": timestamp,
         }
 
