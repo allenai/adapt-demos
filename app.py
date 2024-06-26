@@ -46,7 +46,8 @@ if args.safety_filter_port or args.safety_model:
     # if one of them, both need to be set
     if not args.safety_filter_port or not args.safety_model:
         raise ValueError("Both safety filter port and safety model need to be set")
-    safety_client = ModelClientHandler(args.safety_model, api_key, args.port, debug=args.debug, stream=False)
+
+    safety_client = ModelClientHandler(args.safety_model, api_key, args.safety_filter_port, debug=args.debug, stream=False)
     SAFETY_FILTER_ON = True
 
     safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
