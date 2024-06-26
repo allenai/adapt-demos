@@ -356,7 +356,8 @@ class SafetyChatInterface(Blocks):
 
             self.saved_input = State()
             self.chatbot_state = State(self.chatbot.value) if self.chatbot.value else State([])
-            self.chatbot_state_2 = State(self.chatbot_2.value) if self.chatbot_2.value else State([])
+            if self.side_by_side:
+                self.chatbot_state_2 = State(self.chatbot_2.value) if self.chatbot_2.value else State([])
 
             self.show_progress = show_progress
             self._setup_events()
