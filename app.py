@@ -44,8 +44,13 @@ args = parser.parse_args()
 api_key = "EMPTY"  # OpenAI API key (empty for custom server)
 model_client = ModelClientHandler(args.model, api_key, args.port, debug=args.debug, stream=True)
 
+# Additional inputs
 temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
-additional_inputs = [temperature_slider]
+system_prompt = gr.Textbox(
+    label="System Prompt", placeholder="You are a helpful assistant, please respond to the user prompt."
+)
+
+additional_inputs = [system_prompt, temperature_slider]
 
 if args.safety_filter_port or args.safety_model:
     # if one of them, both need to be set
@@ -58,12 +63,12 @@ if args.safety_filter_port or args.safety_model:
     SAFETY_FILTER_ON = True
 
     safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
-    reprompt_textarea = gr.TextArea(
+    refusal_rewrite_text = gr.TextArea(
         label="Prompt to make assistant safe if detected unsafe. Use placeholder {prompt} for user input and {response} for assistant response.",  # noqa
         value=MAKE_SAFE_PROMPT,
         lines=12,
     )
-    additional_inputs += [safety_filter_checkbox, reprompt_textarea]
+    additional_inputs += [safety_filter_checkbox, refusal_rewrite_text]
     logger.info(f"Safety filter: ON, connecting to {safety_client.model_url}")
 else:
     SAFETY_FILTER_ON = False

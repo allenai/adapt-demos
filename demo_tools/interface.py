@@ -376,6 +376,8 @@ class EnhancedChatInterface(Blocks):
         submit_triggers = [self.textbox.submit, self.submit_btn.click] if self.submit_btn else [self.textbox.submit]
         ######### ######### ######### ######### #########
         if self.side_by_side:
+            addition_inputs_1 = [self.additional_inputs[0]] + self.additional_inputs[2:]
+            addition_inputs_2 = [self.additional_inputs[1]] + self.additional_inputs[2:]
             submit_event = (
                 on(
                     submit_triggers,
@@ -401,7 +403,7 @@ class EnhancedChatInterface(Blocks):
                 )
                 .then(
                     submit_fn,
-                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.saved_input, self.chatbot_state] + addition_inputs_1,
                     [self.chatbot, self.chatbot_state],
                     show_api=False,
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
@@ -409,7 +411,7 @@ class EnhancedChatInterface(Blocks):
                 )
                 .then(
                     submit_fn,
-                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.saved_input, self.chatbot_state] + addition_inputs_2,
                     [self.chatbot_2, self.chatbot_state_2],
                     show_api=False,
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),

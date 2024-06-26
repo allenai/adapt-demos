@@ -43,7 +43,16 @@ class ModelClientHandler:
             # Use a real OpenAI client otherwise
             self.model_client = OpenAI(api_key=api_key, base_url=self.model_url)
 
-    def predict(self, message, history, temperature, safety_filter_checkbox, reprompt_text, completion_mode):
+    def predict(
+        self,
+        message,
+        history,
+        system_prompt,
+        temperature,
+        safety_filter_checkbox,
+        refusal_rewrite_text,
+        completion_mode,
+    ):
         if completion_mode:
             # Streamed completions for interactive mode
             response = self.model_client.chat.completions.create(
@@ -58,6 +67,8 @@ class ModelClientHandler:
         else:
             # History format for chat-like interaction
             history_openai_format = []
+            if len(system_prompt) > 0:
+                history_openai_format.append({"role": "system", "content": system_prompt})
             for human, assistant in history:
                 history_openai_format.append({"role": "user", "content": human})
                 history_openai_format.append({"role": "assistant", "content": assistant})
@@ -82,11 +93,15 @@ class SafetyClientHandler(ModelClientHandler):
         super().__init__(model, api_key, port, debug, stream)
         self.response_client = response_client
 
-    def predict_safety(self, message, history, temperature, safety_filter_checkbox, reprompt_text):
+    def predict_safety(
+        self, message, history, system_prompt, temperature, safety_filter_checkbox, refusal_rewrite_text
+    ):
         if not safety_filter_checkbox:
             return "Safety filter not enabled", ""
 
         history_openai_format = []
+        if len(system_prompt) > 0:
+            history_openai_format.append({"role": "system", "content": system_prompt})
         for human, assistant in history[:-1]:
             history_openai_format.append({"role": "user", "content": human})
             history_openai_format.append({"role": "assistant", "content": assistant})
@@ -133,19 +148,19 @@ class SafetyClientHandler(ModelClientHandler):
             safety_labels[next(iter(safety_labels))].lower() == "yes"
             and safety_labels["Response refusal"].lower() == "no"
         ):
-            reprompt_text = reprompt_text or MAKE_SAFE_PROMPT
+            refusal_rewrite_text = refusal_rewrite_text or MAKE_SAFE_PROMPT
 
             reprompt_kwargs = {}
-            if "{prompt}" in reprompt_text:
+            if "{prompt}" in refusal_rewrite_text:
                 reprompt_kwargs["prompt"] = last_query
-            if "{response}" in reprompt_text:
+            if "{response}" in refusal_rewrite_text:
                 reprompt_kwargs["response"] = last_response
 
             if not reprompt_kwargs:
                 logger.warning(
                     "Make safe prompt template does not include user input ({prompt}) or assistant response ({response})"  # noqa
                 )
-            make_response_safe_input = reprompt_text.format(**reprompt_kwargs)
+            make_response_safe_input = refusal_rewrite_text.format(**reprompt_kwargs)
             logger.debug(" --- MAKE SAFE PROMPT ---")
             logger.debug(make_response_safe_input)
             logger.debug(" ---")

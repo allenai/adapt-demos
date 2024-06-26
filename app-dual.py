@@ -39,6 +39,8 @@ model_client = ModelClientHandler(args.model_one, api_key, args.port_one, debug=
 model_client_2 = ModelClientHandler(args.model_two, api_key, args.port_two, debug=args.debug, stream=True)
 
 # Launch Gradio app
+system_prompt_1 = gr.Textbox(label="Left System Prompt", placeholder="You are a helpful assistant, please respond to the user prompt.")
+system_prompt_2 = gr.Textbox(label="Right System Prompt", placeholder="You are a helpful assistant, please respond to the user prompt.")
 temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
 safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=False)
 
@@ -48,7 +50,7 @@ demo = EnhancedChatInterface(
     model_client=model_client,
     fn_2=model_client_2.predict,
     model_client_2=model_client_2,
-    additional_inputs=[temperature_slider, safety_filter_checkbox],
+    additional_inputs=[system_prompt_1, system_prompt_2, temperature_slider, safety_filter_checkbox],
     title="AI2 Internal Demo Model",
     description=f"""Model 1 (left): {args.model_one}
 
