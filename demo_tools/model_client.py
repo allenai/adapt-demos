@@ -74,6 +74,12 @@ class ModelClientHandler:
                     partial_message += chunk.choices[0].delta.content
                     yield partial_message
 
+
+class SafetyClientHandler(ModelClientHandler):
+    def __init__(self, model, api_key, port, response_client: ModelClientHandler, debug=False, stream=True):
+        super().__init__(model, api_key, port, debug, stream)
+        self.response_client = response_client
+
     def predict_safety(self, message, history, temperature, safety_filter_checkbox, reprompt_text):
         if not safety_filter_checkbox:
             return "Safety filter not enabled", ""
@@ -144,8 +150,8 @@ class ModelClientHandler:
             make_response_safe_openai_format = history_openai_format + [
                 {"role": "user", "content": make_response_safe_input}]
 
-            response = self.model_client.chat.completions.create(
-                model=self.model,
+            response = self.response_client.model_client.chat.completions.create(
+                model=self.response_client.model,
                 messages=make_response_safe_openai_format,
                 temperature=temperature,
             )

@@ -17,7 +17,7 @@ import argparse
 import logging
 import gradio as gr
 
-from demo_tools import ModelClientHandler, SafetyChatInterface, run_dummy_safety_filter
+from demo_tools import ModelClientHandler, SafetyClientHandler, SafetyChatInterface, run_dummy_safety_filter
 from demo_tools.prompts import MAKE_SAFE_PROMPT
 
 logging.basicConfig(level=logging.INFO)
@@ -47,7 +47,9 @@ if args.safety_filter_port or args.safety_model:
     if not args.safety_filter_port or not args.safety_model:
         raise ValueError("Both safety filter port and safety model need to be set")
 
-    safety_client = ModelClientHandler(args.safety_model, api_key, args.safety_filter_port, debug=args.debug, stream=False)
+    safety_client = SafetyClientHandler(
+        args.safety_model, api_key, args.safety_filter_port, model_client, debug=args.debug, stream=False
+    )
     SAFETY_FILTER_ON = True
 
     safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
