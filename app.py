@@ -18,6 +18,7 @@ import logging
 import gradio as gr
 
 from demo_tools import ModelClientHandler, SafetyChatInterface, run_dummy_safety_filter
+from demo_tools.prompts import MAKE_SAFE_PROMPT
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ if args.safety_filter_port or args.safety_model:
         lines=12,
     )
     additional_inputs += [safety_filter_checkbox, reprompt_textarea]
-    logger.info(f"Safety filter: ON, connecting to {safety_url}")
+    logger.info(f"Safety filter: ON, connecting to {safety_client.model_url}")
 else:
     SAFETY_FILTER_ON = False
     logger.info(f"Safety filter: OFF")
