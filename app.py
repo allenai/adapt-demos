@@ -21,7 +21,9 @@ from demo_tools import ModelClientHandler, SafetyChatInterface, run_dummy_safety
 from demo_tools.prompts import MAKE_SAFE_PROMPT
 
 logging.basicConfig(
-    level=logging.INFO, handlers=[logging.StreamHandler()]
+    level=logging.INFO,
+    format='%(name)-12s: %(levelname)-8s %(message)s',
+    handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
