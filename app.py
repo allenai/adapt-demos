@@ -88,7 +88,7 @@ demo = SafetyChatInterface(
     additional_inputs=additional_inputs,
     title="AI2 Internal Demo Model",
     description=f"Model: {args.model}\n\nSafety Model: {args.safety_model}",
-    header=header,
+    head=header,
     css=css,
 )
 
