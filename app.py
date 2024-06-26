@@ -100,7 +100,7 @@ demo = EnhancedChatInterface(
     title="AI2 Internal Demo Model",
     description=f"Model: {args.model}\n\nSafety Model: {args.safety_model}",
     head=header,
-    fill_height=False, # not implemented correctly with safety metadata
+    fill_height=False,  # not implemented correctly with safety metadata
     css=css,
 )
 

@@ -210,7 +210,7 @@ class EnhancedChatInterface(Blocks):
             ##############################
             if self.side_by_side:
                 with Row():
-                    with Column():  
+                    with Column():
                         self.chatbot = Chatbot(label="Chatbot", scale=1, height=700 if fill_height else None)
                     with Column():
                         self.chatbot_2 = Chatbot(label="Chatbot 2", scale=1, height=700 if fill_height else None)
