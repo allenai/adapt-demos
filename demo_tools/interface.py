@@ -217,12 +217,16 @@ class EnhancedChatInterface(Blocks):
                 with Row():
                     with Column():
                         self.chatbot = Chatbot(
-                            label=f"Model: {self.model_client.model}", scale=1, height=700 if fill_height else None,
+                            label=f"Model: {self.model_client.model}",
+                            scale=1,
+                            height=700 if fill_height else None,
                             show_share_button=True,
                         )
                     with Column():
                         self.chatbot_2 = Chatbot(
-                            label=f"Model: {self.model_client_2.model}", scale=1, height=700 if fill_height else None,
+                            label=f"Model: {self.model_client_2.model}",
+                            scale=1,
+                            height=700 if fill_height else None,
                             show_share_button=True,
                         )
                 # Safety content current disabled for side-by-side, finale design TBD
