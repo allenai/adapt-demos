@@ -234,9 +234,7 @@ class EnhancedChatInterface(Blocks):
                         if chatbot:
                             self.chatbot = chatbot.render()
                         else:
-                            self.chatbot = Chatbot(
-                                label="Chatbot", scale=1, height="40%" if fill_height else None
-                            )
+                            self.chatbot = Chatbot(label="Chatbot", scale=1, height="40%" if fill_height else None)
 
                     with Column(scale=1):
                         self.safety_log = Markdown("Safety content to appear here")
@@ -858,8 +856,8 @@ class EnhancedChatInterface(Blocks):
             ],  # Making sure to add an empty list or lists for data compatibility
             "timestamp": timestamp,
             "debug": debug_mode,
-            "metadata": {}, # TODO add safety metadata
-      }
+            "metadata": {},  # TODO add safety metadata
+        }
 
         with open(file_path, "w") as f:
             json.dump(data_to_save, f, indent=4)
@@ -882,7 +880,7 @@ class EnhancedChatInterface(Blocks):
             "conversation_2": chat_history_2,
             "timestamp": timestamp,
             "debug": debug_mode,
-            "metadata": {}, # TODO add safety metadata
+            "metadata": {},  # TODO add safety metadata
         }
 
         with open(file_path, "w") as f:
