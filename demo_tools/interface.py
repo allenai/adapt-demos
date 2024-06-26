@@ -201,7 +201,12 @@ class EnhancedChatInterface(Blocks):
             with Row():
                 with Column(scale=3):
                     if title:
-                        Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
+                        title_str = f"""<div style="display: flex; align-items: center;">
+                                        <img src="/file=assets/ai2-logo.png" style="width: 25px; height: 25px; margin-top: 10px; margin-bottom: -7px; margin-right: 5px;">
+                                        <h1 style="margin-bottom: 1rem;">{self.title}</h1>
+                                    </div>"""
+                        # Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
+                        Markdown(title_str)  # removed text-align: center;
                     if description:
                         Markdown(description)
                 # with Column(scale=2):
@@ -305,7 +310,7 @@ class EnhancedChatInterface(Blocks):
                                 submit_btn,
                                 variant="primary",
                                 scale=1,
-                                min_width=150,
+                                min_width=135,
                             )
                         else:
                             raise ValueError(
@@ -321,7 +326,7 @@ class EnhancedChatInterface(Blocks):
                                 variant="stop",
                                 visible=False,
                                 scale=1,
-                                min_width=150,
+                                min_width=135,
                             )
                         else:
                             raise ValueError(
