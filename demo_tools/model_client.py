@@ -14,11 +14,12 @@
 
 import logging
 from collections import OrderedDict
+
 from gradio.components import HTML
 from openai import OpenAI
 
 from .dummy_chatbot import MockOpenAI, MockOpenAIStream
-from .prompts import WILDGUARD_INPUT_FORMAT, MAKE_SAFE_PROMPT
+from .prompts import MAKE_SAFE_PROMPT, WILDGUARD_INPUT_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ class ModelClientHandler:
     def __init__(self, model, api_key, port, debug=False, stream=True):
         self.model_url = f"http://localhost:{port}/v1"
         self.model = model
+        self.debug = debug
         if debug:
             if stream:
                 # Use a mock client when debugging
@@ -99,6 +101,7 @@ class SafetyClientHandler(ModelClientHandler):
             stream=False,
         )
 
+        # import ipdb; ipdb.set_trace()
         safety_labels = [
             [s.strip() for s in label.split(":")]
             for label in safety_response.choices[0].message.content.split("\n")
@@ -113,7 +116,7 @@ class SafetyClientHandler(ModelClientHandler):
 
         safety_labels_html = "\n<br/>\n".join(
             [
-                f"{key} <span class='badge text-bg-{'warning' if label.lower() == safety_unwanted_labels[i] else 'success'}'>"
+                f"{key} <span class='badge text-bg-{'warning' if label.lower() == safety_unwanted_labels[i] else 'success'}'>"  # noqa
                 f"{label.capitalize()}"
                 f"</span>"
                 for i, (key, label) in enumerate(safety_labels)
@@ -123,14 +126,13 @@ class SafetyClientHandler(ModelClientHandler):
 
         safety_labels = OrderedDict(safety_labels)
         if not safety_labels or "Response refusal" not in safety_labels:
-            logger.error(
-                f"Safety class response cannot be parsed: "
-                f"[{safety_response.choices[0].message.content}]"
-            )
+            logger.error(f"Safety class response cannot be parsed: " f"[{safety_response.choices[0].message.content}]")
             safety_labels_html = "<p class='text-danger'>Safety response cannot be parsed, please try again</p>"
             safe_response = ""
-        elif safety_labels[next(iter(safety_labels))].lower() == "yes" and safety_labels[
-            "Response refusal"].lower() == "no":
+        elif (
+            safety_labels[next(iter(safety_labels))].lower() == "yes"
+            and safety_labels["Response refusal"].lower() == "no"
+        ):
             reprompt_text = reprompt_text or MAKE_SAFE_PROMPT
 
             reprompt_kwargs = {}
@@ -141,14 +143,15 @@ class SafetyClientHandler(ModelClientHandler):
 
             if not reprompt_kwargs:
                 logger.warning(
-                    "Make safe prompt template does not include user input ({prompt}) or assistant response ({response})"
+                    "Make safe prompt template does not include user input ({prompt}) or assistant response ({response})"  # noqa
                 )
             make_response_safe_input = reprompt_text.format(**reprompt_kwargs)
             logger.debug(" --- MAKE SAFE PROMPT ---")
             logger.debug(make_response_safe_input)
             logger.debug(" ---")
             make_response_safe_openai_format = history_openai_format + [
-                {"role": "user", "content": make_response_safe_input}]
+                {"role": "user", "content": make_response_safe_input}
+            ]
 
             response = self.response_client.model_client.chat.completions.create(
                 model=self.response_client.model,
@@ -165,5 +168,7 @@ class SafetyClientHandler(ModelClientHandler):
             )
         else:
             safe_response = "Assistant's response is safe"
+            if self.debug:
+                safe_response = "NOTE: FILTER OFF IN DEBUG MODE.\n"
 
         return HTML(safety_labels_html), safe_response

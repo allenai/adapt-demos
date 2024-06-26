@@ -21,8 +21,11 @@ This file defines a useful high-level abstraction to build Gradio chatbots: Chat
 
 from __future__ import annotations
 
+import datetime  # Added imports
 import functools
 import inspect
+import json  # Added imports
+import os  # Added imports
 from typing import AsyncGenerator, Callable, Literal, Union, cast
 
 import anyio
@@ -46,9 +49,11 @@ from gradio.themes import ThemeClass as Theme
 from gradio.utils import SyncToAsyncIterator, async_iteration, async_lambda
 from gradio_client.documentation import document
 
+from .model_client import ModelClientHandler  # Added imports
+
 
 @document()
-class SafetyChatInterface(Blocks):
+class EnhancedChatInterface(Blocks):
     """
     ChatInterface is Gradio's high-level abstraction for creating chatbot UIs, and allows you to create
     a web-based demo around a chatbot model in a few lines of code. Only one parameter is required: fn, which
@@ -71,8 +76,10 @@ class SafetyChatInterface(Blocks):
         self,
         fn: Callable,
         safety_fn: Callable,
+        model_client: ModelClientHandler,
         *,
         fn_2: Callable | None = None,
+        model_client_2: ModelClientHandler | None = None,
         multimodal: bool = False,
         chatbot: Chatbot | None = None,
         textbox: Textbox | MultimodalTextbox | None = None,
@@ -179,6 +186,8 @@ class SafetyChatInterface(Blocks):
                 f"The `additional_inputs_accordion` parameter must be a string or gr.Accordion, not {type(additional_inputs_accordion)}"
             )
 
+        self.model_client = model_client
+        self.model_client_2 = model_client_2
         ##### MODIFIED FOR SIDE-BY-SIDE
         self.fn_2 = fn_2
         if self.fn_2:
@@ -202,22 +211,23 @@ class SafetyChatInterface(Blocks):
             if self.side_by_side:
                 with Row():
                     with Column():
-                        self.chatbot = Chatbot(label="Chatbot", scale=1, height=600 if fill_height else None)
+                        self.chatbot = Chatbot(label="Chatbot", scale=1, height=700 if fill_height else None)
                     with Column():
-                        self.chatbot_2 = Chatbot(label="Chatbot 2", scale=1, height=600 if fill_height else None)
-                with Row():
-                    with Column():
-                        self.safety_log = Markdown("Safety content to appear here")
+                        self.chatbot_2 = Chatbot(label="Chatbot 2", scale=1, height=700 if fill_height else None)
+                # Safety content current disabled for side-by-side, finale design TBD
+                # with Row():
+                #     with Column():
+                #         self.safety_log = Markdown("Safety content to appear here")
 
-                        self.safe_response = Markdown(
-                            "If assistant response is detected as harmful, a safe version would appear here"
-                        )
-                    with Column():
-                        self.safety_log_2 = Markdown("Safety content to appear here")
+                #         self.safe_response = Markdown(
+                #             "If assistant response is detected as harmful, a safe version would appear here"
+                #         )
+                #     with Column():
+                #         self.safety_log_2 = Markdown("Safety content to appear here")
 
-                        self.safe_response_2 = Markdown(
-                            "If assistant response is detected as harmful, a safe version would appear here"
-                        )
+                #         self.safe_response_2 = Markdown(
+                #             "If assistant response is detected as harmful, a safe version would appear here"
+                #         )
             ##############################
             else:
                 with Row():
@@ -225,9 +235,7 @@ class SafetyChatInterface(Blocks):
                         if chatbot:
                             self.chatbot = chatbot.render()
                         else:
-                            self.chatbot = Chatbot(
-                                label="Chatbot", scale=1, height="40%" if fill_height else None
-                            )
+                            self.chatbot = Chatbot(label="Chatbot", scale=1, height="40%" if fill_height else None)
 
                     with Column(scale=1):
                         self.safety_log = Markdown("Safety content to appear here")
@@ -356,7 +364,7 @@ class SafetyChatInterface(Blocks):
 
             self.saved_input = State()
             self.chatbot_state = State(self.chatbot.value) if self.chatbot.value else State([])
-            if self.side_by_side:
+            if self.side_by_side:  # MODIFIED FOR SIDE-BY-SIDE
                 self.chatbot_state_2 = State(self.chatbot_2.value) if self.chatbot_2.value else State([])
 
             self.show_progress = show_progress
@@ -407,17 +415,23 @@ class SafetyChatInterface(Blocks):
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                     show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                 )
+                # .then( # SAFETY NOT ENABLE IN SIDEBYSIDE
+                #     self.safety_fn,
+                #     [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                #     [self.safety_log, self.safe_response],
+                #     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                # )
+                # .then(
+                #     self.safety_fn,
+                #     [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
+                #     [self.safety_log_2, self.safe_response_2],
+                #     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                # )
                 .then(
-                    self.safety_fn,
-                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
-                    [self.safety_log, self.safe_response],
-                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
-                )
-                .then(
-                    self.safety_fn,
-                    [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
-                    [self.safety_log_2, self.safe_response_2],
-                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                    self._save_dual_conversation,
+                    inputs=[self.chatbot_state, self.chatbot_state_2],
+                    outputs=[],
+                    show_api=False,
                 )
             )
         #################################
@@ -450,6 +464,13 @@ class SafetyChatInterface(Blocks):
                     self.safety_fn,
                     [self.saved_input, self.chatbot_state] + self.additional_inputs,
                     [self.safety_log, self.safe_response],
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                )  # SAVING DATA BELOW
+                .then(
+                    self._save_single_conversation,
+                    inputs=[self.chatbot_state],
+                    outputs=[],
+                    show_api=False,
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                 )
             )
@@ -489,6 +510,13 @@ class SafetyChatInterface(Blocks):
                         concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                         show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                     )
+                    .then(
+                        self._save_dual_conversation,
+                        inputs=[self.chatbot_state, self.chatbot_state_2],
+                        outputs=[],
+                        show_api=False,
+                        concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                    )
                 )
             ######### ######### ######### ######### #########
             else:
@@ -514,6 +542,13 @@ class SafetyChatInterface(Blocks):
                         show_api=False,
                         concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                         show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
+                    )
+                    .then(
+                        self._save_single_conversation,
+                        inputs=[self.chatbot_state],
+                        outputs=[],
+                        show_api=False,
+                        concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                     )
                 )
             self._setup_stop_events([self.retry_btn.click], retry_event)
@@ -802,3 +837,54 @@ class SafetyChatInterface(Blocks):
         else:
             history = history[:-1]
         return history, message or "", history
+
+    # below added by nathanl@
+    def _save_single_conversation(self, chat_history):
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        debug_mode = self.model_client.debug
+
+        file_suffix = "_debug" if debug_mode else ""
+        directory = "user_data"
+        os.makedirs(directory, exist_ok=True)  # Ensure directory exists
+        file_path = f"{directory}/chat_history_{timestamp}{file_suffix}.json"
+
+        data_to_save = {
+            "model_name": self.model_client.model,
+            "conversation": chat_history,
+            "model_name_2": None,  # No second model in this function
+            "conversation_2": [
+                [],
+            ],  # Making sure to add an empty list or lists for data compatibility
+            "timestamp": timestamp,
+            "debug": debug_mode,
+            "metadata": {},  # TODO add safety metadata
+        }
+
+        with open(file_path, "w") as f:
+            json.dump(data_to_save, f, indent=4)
+
+        return "Conversation saved successfully!"
+
+    def _save_dual_conversation(self, chat_history, chat_history_2):
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        debug_mode = self.model_client.debug
+
+        file_suffix = "_debug" if debug_mode else ""
+        directory = "user_data"
+        os.makedirs(directory, exist_ok=True)  # Ensure directory exists
+        file_path = f"{directory}/chat_history_{timestamp}{file_suffix}.json"
+
+        data_to_save = {
+            "model_name": self.model_client.model,
+            "conversation": chat_history,
+            "model_name_2": self.model_client_2.model,
+            "conversation_2": chat_history_2,
+            "timestamp": timestamp,
+            "debug": debug_mode,
+            "metadata": {},  # TODO add safety metadata
+        }
+
+        with open(file_path, "w") as f:
+            json.dump(data_to_save, f, indent=4)
+
+        return "Conversation saved successfully!"

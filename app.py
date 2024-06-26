@@ -13,11 +13,16 @@
 # limitations under the License.
 
 import argparse
-
 import logging
+
 import gradio as gr
 
-from demo_tools import ModelClientHandler, SafetyClientHandler, SafetyChatInterface, run_dummy_safety_filter
+from demo_tools import (
+    EnhancedChatInterface,
+    ModelClientHandler,
+    SafetyClientHandler,
+    run_dummy_safety_filter,
+)
 from demo_tools.prompts import MAKE_SAFE_PROMPT
 
 logging.basicConfig(level=logging.INFO)
@@ -54,7 +59,7 @@ if args.safety_filter_port or args.safety_model:
 
     safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
     reprompt_textarea = gr.TextArea(
-        label="Prompt to make assistant safe if detected unsafe. Use placeholder {prompt} for user input and {response} for assistant response.",
+        label="Prompt to make assistant safe if detected unsafe. Use placeholder {prompt} for user input and {response} for assistant response.",  # noqa
         value=MAKE_SAFE_PROMPT,
         lines=12,
     )
@@ -62,14 +67,15 @@ if args.safety_filter_port or args.safety_model:
     logger.info(f"Safety filter: ON, connecting to {safety_client.model_url}")
 else:
     SAFETY_FILTER_ON = False
-    logger.info(f"Safety filter: OFF")
+    logger.info("Safety filter: OFF")
 
 
-# Launch Gradio app
-
-header = """
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+# Custom style code
+js_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+css_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+header = f"""
+<link rel="stylesheet" href="{css_url}">
+<script src="{js_url}" crossorigin="anonymous"></script>
 """
 
 css = """
@@ -85,13 +91,16 @@ css = """
 }
 """
 
-demo = SafetyChatInterface(
+# Launch Gradio app
+demo = EnhancedChatInterface(
     model_client.predict,
     safety_client.predict_safety if SAFETY_FILTER_ON else run_dummy_safety_filter,
+    model_client=model_client,
     additional_inputs=additional_inputs,
     title="AI2 Internal Demo Model",
     description=f"Model: {args.model}\n\nSafety Model: {args.safety_model}",
     head=header,
+    fill_height=False,  # not implemented correctly with safety metadata
     css=css,
 )
 
