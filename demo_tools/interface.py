@@ -204,8 +204,8 @@ class EnhancedChatInterface(Blocks):
                         Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
                     if description:
                         Markdown(description)
-                with Column(scale=2):
-                    self.safety_log = Markdown("Safety content to appear here")
+                # with Column(scale=2):
+                #     self.safety_log = Markdown("Safety content to appear here")
 
             ##############################
             if self.side_by_side:
@@ -214,12 +214,36 @@ class EnhancedChatInterface(Blocks):
                         self.chatbot = Chatbot(label="Chatbot", scale=1, height=600 if fill_height else None)
                     with Column():
                         self.chatbot_2 = Chatbot(label="Chatbot 2", scale=1, height=600 if fill_height else None)
+                with Row():
+                    with Column():
+                        self.safety_log = Markdown("Safety content to appear here")
+
+                        self.safe_response = Markdown(
+                            "If assistant response is detected as harmful, a safe version would appear here"
+                        )
+                    with Column():
+                        self.safety_log_2 = Markdown("Safety content to appear here")
+
+                        self.safe_response_2 = Markdown(
+                            "If assistant response is detected as harmful, a safe version would appear here"
+                        )
             ##############################
             else:
-                if chatbot:
-                    self.chatbot = chatbot.render()
-                else:
-                    self.chatbot = Chatbot(label="Chatbot", scale=1, height=200 if fill_height else None)
+                with Row():
+                    with Column(scale=4):
+                        if chatbot:
+                            self.chatbot = chatbot.render()
+                        else:
+                            self.chatbot = Chatbot(
+                                label="Chatbot", scale=1, height="40%" if fill_height else None
+                            )
+
+                    with Column(scale=1):
+                        self.safety_log = Markdown("Safety content to appear here")
+
+                        self.safe_response = Markdown(
+                            "If assistant response is detected as harmful, a safe version would appear here"
+                        )
 
             with Row():
                 for btn in [retry_btn, undo_btn, clear_btn]:
@@ -395,7 +419,13 @@ class EnhancedChatInterface(Blocks):
                 # .then( # SAFETY NOT ENABLE IN SIDEBYSIDE
                 #     self.safety_fn,
                 #     [self.saved_input, self.chatbot_state] + self.additional_inputs,
-                #     [self.safety_log],
+                #     [self.safety_log, self.safe_response],
+                #     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                # )
+                # .then(
+                #     self.safety_fn,
+                #     [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
+                #     [self.safety_log_2, self.safe_response_2],
                 #     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                 # )
                 .then(
@@ -403,7 +433,6 @@ class EnhancedChatInterface(Blocks):
                     inputs=[self.chatbot_state, self.chatbot_state_2],
                     outputs=[],
                     show_api=False,
-                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                 )
             )
         #################################
@@ -435,7 +464,7 @@ class EnhancedChatInterface(Blocks):
                 .then(
                     self.safety_fn,
                     [self.saved_input, self.chatbot_state] + self.additional_inputs,
-                    [self.safety_log],
+                    [self.safety_log, self.safe_response],
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                 )  # SAVING DATA BELOW
                 .then(
@@ -829,7 +858,8 @@ class EnhancedChatInterface(Blocks):
             ],  # Making sure to add an empty list or lists for data compatibility
             "timestamp": timestamp,
             "debug": debug_mode,
-        }
+            "metadata": {}, # TODO add safety metadata
+      }
 
         with open(file_path, "w") as f:
             json.dump(data_to_save, f, indent=4)
@@ -852,6 +882,7 @@ class EnhancedChatInterface(Blocks):
             "conversation_2": chat_history_2,
             "timestamp": timestamp,
             "debug": debug_mode,
+            "metadata": {}, # TODO add safety metadata
         }
 
         with open(file_path, "w") as f:

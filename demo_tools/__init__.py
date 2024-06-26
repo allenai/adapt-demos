@@ -14,13 +14,14 @@
 
 from .dummy_chatbot import MockOpenAI, MockOpenAIStream
 from .interface import EnhancedChatInterface
-from .model_client import ModelClientHandler, run_dummy_safety_filter
+from .model_client import ModelClientHandler, SafetyClientHandler, run_dummy_safety_filter
 from .prompts import WILDGUARD_INPUT_FORMAT
 
 All = [
     MockOpenAI,
     MockOpenAIStream,
     ModelClientHandler,
+    SafetyClientHandler,
     EnhancedChatInterface,
     WILDGUARD_INPUT_FORMAT,
     run_dummy_safety_filter,

@@ -24,3 +24,15 @@ AI assistant:
 
 Answers: [/INST]
 """
+
+
+MAKE_SAFE_PROMPT = """[INST] You're a helpful assistant, please refuse to answer the harmful prompt.
+
+Human user:
+{prompt}
+
+Unsafe response:
+{response}
+
+Assistant: [\INST]
+"""

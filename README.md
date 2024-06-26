@@ -32,7 +32,7 @@ Next, install with editable mode.
 
 Some important features are needed in the gradio app (preferably via gui rather than argparse)
 
-1. Ability to edit system prompts
+1. Ability to edit system prompts 
 
 2. Ability to edit sampling parameters
 
@@ -54,6 +54,12 @@ Port mapping outputs (key part on last line, you need this later):
     Reserved 2 GPUs, 31 CPUs
     Exposed Ports: 0.0.0.0:32800->8000/tcp
 
+**For Safety Models**  you need to create another beaker session, run either of these commands in the same machine depending on the size of your model:
+
+    beaker session create --image beaker://nathanl/rb_v16 --gpus 1 --budget ai2/oe-adapt --port 8001
+    beaker session create --image beaker://nathanl/vllm_image --gpus 2 --budget ai2/oe-adapt --port 8001 # for newer olmo models
+
+Make sure to take note of the port mapping output similar to above.
 
 ### Download model (e.g. beaker Dataset or from HuggingFace)
 
@@ -76,7 +82,12 @@ NOTE: If your model doesn’t have the chat template in the tokenizer config, se
 **No chat template?** If there is not chat template in the tokenizer, you must pass a chat template to vllm with `--chat\_template={template.jinja}`. Some are provided in the [gradio repository](https://huggingface.co/spaces/ai2-adapt-dev/chat-demo-example), which you can clone and pass the local file in when using vllm, as so:
 
     cd /net/nfs.cirrascale/allennlp/nathanl/chat-demo-example
-    python -m vllm.entrypoints.openai.api_server --model /net/nfs.cirrascale/aristo/oyvindt/olmo-models/olmo-70b-1T-step160500-hf/ --tensor-parallel-size 3 --chat-template=templates/none.jinja
+    python -m vllm.entrypoints.openai.api_server --model /net/nfs.cirrascale/mosaic/liweij/auto_jailbreak/src/EasyLM/models/v3/tulu2mix-all-vani_b-50000-vani_h-50000-adv_b-50000-adv_h-50000 --tensor-parallel-size 3 --chat-template=templates/none.jinja
+
+**For safety models** You need to run an API server (e.g., adding a wildguard model), MODIFY
+
+    python -m vllm.entrypoints.openai.api_server --model allenai/wildguard --tensor-parallel-size 2 --port 8001
+
 
 ### Set up Gradio UI ON A BEAKER MACHINE
 
@@ -95,6 +106,10 @@ pip install gradio openai
 **Run the model!**
 
     python app.py --port 32800 --model /net/nfs.cirrascale/allennlp/nathanl/models/tulu_2_llama_3_8b_dpo/
+
+**For Safety Models** run the following command: if you run on the same machine on which you created the beaker session, no need to provide a port:
+
+    python app.py --model /net/nfs.cirrascale/mosaic/liweij/auto_jailbreak/src/EasyLM/models/v3/tulu2mix-all-vani_b-50000-vani_h-50000-adv_b-50000-adv_h-50000 --safety_model allenai/wildguard 
 
 It’ll print something like\
 Running on local URL:  http\://127.0.0.1:7860
