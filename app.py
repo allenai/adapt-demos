@@ -20,7 +20,9 @@ import gradio as gr
 from demo_tools import ModelClientHandler, SafetyChatInterface, run_dummy_safety_filter
 from demo_tools.prompts import MAKE_SAFE_PROMPT
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO, handlers=[logging.StreamHandler()]
+)
 logger = logging.getLogger(__name__)
 
 # Define an argument parser
