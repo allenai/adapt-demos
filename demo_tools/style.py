@@ -25,6 +25,9 @@ css_style = """
 .safe-title {
     color: white;
 }
+.white-background {
+    background-color: white;
+}
 footer {visibility: hidden}
 """
 
@@ -34,6 +37,9 @@ theme = gr.themes.Soft(
     font=[gr.themes.GoogleFont("Source Sans Pro")],
     font_mono=[gr.themes.GoogleFont("IBM Plex Mono")],
 ).set(
+    # core
+    body_background_fill="#0A3235",
+    # misc
     loader_color="#0FCB8C",
     slider_color="#0FCB8C",
     block_border_color="#e1d9d1",  # darkened faf2e9

@@ -59,4 +59,4 @@ demo = EnhancedChatInterface(
     concurrency_limit=4,
 )
 
-demo.queue().launch(allowed_paths=['assets/'], share=True)
+demo.queue().launch(allowed_paths=['demo_tools/'], share=True)

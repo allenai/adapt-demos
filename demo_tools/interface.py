@@ -203,7 +203,7 @@ class EnhancedChatInterface(Blocks):
                     if title:
                         title_str = f"""<div style="display: flex; align-items: center;">
                                         <img src="/file=demo_tools/assets/ai2-logo.png" style="width: 25px; height: 25px; margin-top: 10px; margin-bottom: -7px; margin-right: 5px;">
-                                        <h1 style="margin-bottom: 1rem;">{self.title}</h1>
+                                        <h1 style="margin-bottom: 1rem; color:white">{self.title}</h1>
                                     </div>"""
                         # Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
                         Markdown(title_str)  # removed text-align: center;
@@ -258,10 +258,11 @@ class EnhancedChatInterface(Blocks):
                             )
 
                     with Column(scale=1):
-                        self.safety_log = Markdown("Safety content to appear here")
-
+                        self.safety_log = Markdown(
+                            "<div style='background-color: white; padding: 10px;'>Safety content to appear here</div>"
+                        )
                         self.safe_response = Markdown(
-                            "If assistant response is detected as harmful, a safe version would appear here"
+                            "<div style='background-color: white; padding: 10px;'>If assistant response is detected as harmful, a safe version would appear here</div>"
                         )
 
             with Row():

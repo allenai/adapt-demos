@@ -175,7 +175,7 @@ class SafetyClientHandler(ModelClientHandler):
             )
 
             safe_response = HTML(
-                f"""<div class="card text-bg-success">
+                f"""<div class="card text-bg-success white-background" style='background-color: white; padding: 10px;>
                         <h4 class="card-title safe-title">Safe Response</h4>
                         <div class="card-body safe-text">{response.choices[0].message.content}
                         </div>
@@ -186,4 +186,8 @@ class SafetyClientHandler(ModelClientHandler):
             if self.debug:
                 safe_response = "NOTE: FILTER OFF IN DEBUG MODE.\n"
 
-        return HTML(safety_labels_html), safe_response
+        # modify the responses with html for white background
+        safety_labels_html = f"<div style='background-color: white; padding: 10px;>{safety_labels_html}</div>"
+        safe_response = f"<div style='background-color: white; padding: 10px;>{safe_response}</div>"
+
+        return HTML(safety_labels_html), HTML(safe_response)
