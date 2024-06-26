@@ -211,9 +211,13 @@ class EnhancedChatInterface(Blocks):
             if self.side_by_side:
                 with Row():
                     with Column():
-                        self.chatbot = Chatbot(label="Chatbot", scale=1, height=700 if fill_height else None)
+                        self.chatbot = Chatbot(
+                            label=f"Model: {self.model_client.model}", scale=1, height=700 if fill_height else None
+                        )
                     with Column():
-                        self.chatbot_2 = Chatbot(label="Chatbot 2", scale=1, height=700 if fill_height else None)
+                        self.chatbot_2 = Chatbot(
+                            label=f"Model: {self.model_client_2.model}", scale=1, height=700 if fill_height else None
+                        )
                 # Safety content current disabled for side-by-side, finale design TBD
                 # with Row():
                 #     with Column():
@@ -235,7 +239,11 @@ class EnhancedChatInterface(Blocks):
                         if chatbot:
                             self.chatbot = chatbot.render()
                         else:
-                            self.chatbot = Chatbot(label="Chatbot", scale=1, height="40%" if fill_height else None)
+                            self.chatbot = Chatbot(
+                                label=f"Model: {self.model_client.model}",
+                                scale=1,
+                                height="40%" if fill_height else None,
+                            )
 
                     with Column(scale=1):
                         self.safety_log = Markdown("Safety content to appear here")
@@ -250,7 +258,7 @@ class EnhancedChatInterface(Blocks):
                         if isinstance(btn, Button):
                             btn.render()
                         elif isinstance(btn, str):
-                            btn = Button(btn, variant="secondary", size="sm", min_width=60)
+                            btn = Button(btn, variant="primary", size="sm", min_width=60)
                         else:
                             raise ValueError(
                                 f"All the _btn parameters must be a gr.Button, string, or None, not {type(btn)}"

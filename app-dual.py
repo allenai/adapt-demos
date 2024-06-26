@@ -17,6 +17,8 @@ import argparse
 import gradio as gr
 
 from demo_tools import (
+    css_style,
+    theme,
     ModelClientHandler,
     EnhancedChatInterface,
     run_dummy_safety_filter,
@@ -51,10 +53,10 @@ demo = EnhancedChatInterface(
     fn_2=model_client_2.predict,
     model_client_2=model_client_2,
     additional_inputs=[system_prompt_1, system_prompt_2, temperature_slider, safety_filter_checkbox],
-    title="AI2 Internal Demo Model",
-    description=f"""Model 1 (left): {args.model_one}
-
-                            Model 2 (right): {args.model_two}""",
+    title="AI2 Internal Model Demo",
+    css=css_style,
+    theme=theme,
+    concurrency_limit=4,
 )
 
 demo.queue().launch(share=True)

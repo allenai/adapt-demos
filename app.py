@@ -21,7 +21,9 @@ from demo_tools import (
     EnhancedChatInterface,
     ModelClientHandler,
     SafetyClientHandler,
+    css_style,
     run_dummy_safety_filter,
+    theme,
 )
 from demo_tools.prompts import MAKE_SAFE_PROMPT
 
@@ -83,30 +85,20 @@ header = f"""
 <script src="{js_url}" crossorigin="anonymous"></script>
 """
 
-css = """
-.classifier-text {
-    font-size: 20px !important;
-}
-.safe-text {
-    font-size: 16px !important;
-    color: white;
-}
-.safe-title {
-    color: white;
-}
-"""
-
 # Launch Gradio app
 demo = EnhancedChatInterface(
     model_client.predict,
     safety_client.predict_safety if SAFETY_FILTER_ON else run_dummy_safety_filter,
     model_client=model_client,
     additional_inputs=additional_inputs,
-    title="AI2 Internal Demo Model",
+    title="AI2 Internal Model Demo",
     description=f"Model: {args.model}\n\nSafety Model: {args.safety_model}",
     head=header,
     fill_height=False,  # not implemented correctly with safety metadata
-    css=css,
+    css=css_style,
+    theme=theme,
+    show_share_button=True,
+    concurrency_limit=4,
 )
 
 demo.queue().launch(share=True)
