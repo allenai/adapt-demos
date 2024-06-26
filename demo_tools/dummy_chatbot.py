@@ -103,7 +103,7 @@ class MockOpenAI(MockClient):
         :param stream: whether the response should be streamed
         :return: Generator yielding parts of a completion
         """
-        mock_response_parts = ["Harmful request: no", "Response refusal: no", "Harmful response: no"]
+        mock_response_parts = ["Harmful request: no\n", "Response refusal: no\n", "Harmful response: no"]
 
         print("Non-streaming response")
         full_message = "".join(mock_response_parts)

@@ -95,10 +95,12 @@ css = """
 demo = EnhancedChatInterface(
     model_client.predict,
     safety_client.predict_safety if SAFETY_FILTER_ON else run_dummy_safety_filter,
+    model_client=model_client,
     additional_inputs=additional_inputs,
     title="AI2 Internal Demo Model",
     description=f"Model: {args.model}\n\nSafety Model: {args.safety_model}",
     head=header,
+    fill_height=False, # not implemented correctly with safety metadata
     css=css,
 )
 

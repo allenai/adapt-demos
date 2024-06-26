@@ -101,6 +101,7 @@ class SafetyClientHandler(ModelClientHandler):
             stream=False,
         )
 
+        # import ipdb; ipdb.set_trace()
         safety_labels = [
             [s.strip() for s in label.split(":")]
             for label in safety_response.choices[0].message.content.split("\n")
@@ -167,5 +168,7 @@ class SafetyClientHandler(ModelClientHandler):
             )
         else:
             safe_response = "Assistant's response is safe"
+            if self.debug:
+                safe_response = "NOTE: FILTER OFF IN DEBUG MODE.\n"
 
         return HTML(safety_labels_html), safe_response
