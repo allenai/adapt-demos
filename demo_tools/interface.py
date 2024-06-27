@@ -79,6 +79,7 @@ class EnhancedChatInterface(Blocks):
         model_client: ModelClientHandler,
         *,
         fn_2: Callable | None = None,
+        safety_fn_2: Callable | None = None,
         model_client_2: ModelClientHandler | None = None,
         multimodal: bool = False,
         chatbot: Chatbot | None = None,
@@ -422,7 +423,7 @@ class EnhancedChatInterface(Blocks):
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                 )
                 .then(
-                    self.safety_fn,
+                    self.safety_fn_2,
                     [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
                     [self.safety_log_2, self.safe_response_2],
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
