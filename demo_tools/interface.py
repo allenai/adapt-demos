@@ -253,7 +253,7 @@ class EnhancedChatInterface(Blocks):
                             self.chatbot = Chatbot(
                                 label=f"Model: {self.model_client.model}",
                                 scale=1,
-                                height="40%" if fill_height else None,
+                                height=700 if fill_height else None,
                                 show_share_button=True,
                             )
 

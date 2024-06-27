@@ -54,6 +54,7 @@ demo = EnhancedChatInterface(
     model_client_2=model_client_2,
     additional_inputs=[system_prompt_1, system_prompt_2, temperature_slider, safety_filter_checkbox],
     title="AI2 Internal Model Demo",
+    fill_height=True,
     css=css_style,
     theme=theme,
     concurrency_limit=4,
