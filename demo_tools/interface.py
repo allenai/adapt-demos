@@ -950,9 +950,13 @@ def _cleanup_safe_response(safe_response: str) -> str:
     Returns:
         safe response text
     """
-    m = re.match(r'.*<div class="card-body safe-text">(.+)</div>\s*</div>.*', safe_response, re.MULTILINE | re.DOTALL)
+    m = re.match(r'.*<div class="card-body safe-text">(.+)(</div>\s*){3,}.*', safe_response, re.MULTILINE | re.DOTALL)
     if m is not None:
         safe_response = m.group(1).strip()
+    else:
+        m = re.match(r".*<div style[^>]*><p[^>]*>(.+)</p>\s*</div>.*", safe_response, re.MULTILINE | re.DOTALL)
+        if m is not None:
+            safe_response = m.group(1).strip()
 
     return safe_response
 

@@ -179,13 +179,13 @@ class SafetyClientHandler(ModelClientHandler):
             if not response.choices[0].message.content.strip():
                 logger.warning("Refusal rewrite response is empty")
 
-            safe_response = f"""<div class="card text-bg-success white-background" style='background-color: white; padding: 10px;>
+            safe_response = f"""<div class="card white-background" style='background-color: white; padding: 10px;>
                         <h4 class="card-title safe-title">Safe Response</h4>
                         <div class="card-body safe-text">{response.choices[0].message.content}
                         </div>
                 </div>"""
         else:
-            safe_response = "Assistant's response is safe"
+            safe_response = "<p style='color: black'>Assistant's response is safe</p>"
             if self.debug:
                 safe_response = "NOTE: FILTER OFF IN DEBUG MODE.\n"
 
