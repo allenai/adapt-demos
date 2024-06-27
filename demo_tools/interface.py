@@ -92,6 +92,7 @@ class EnhancedChatInterface(Blocks):
         examples_per_page: int = 10,
         title: str | None = None,
         description: str | None = None,
+        description_2: str | None = None,
         theme: Theme | str | None = None,
         css: str | None = None,
         js: str | None = None,
@@ -206,8 +207,11 @@ class EnhancedChatInterface(Blocks):
                         Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
                     if description:
                         Markdown(description)
-                # with Column(scale=2):
-                #     self.safety_log = Markdown("Safety content to appear here")
+
+                if self.side_by_side:
+                    with Column(scale=3):
+                        if description_2:
+                            Markdown(description_2)
 
             ##############################
             if self.side_by_side:
