@@ -153,6 +153,7 @@ class EnhancedChatInterface(Blocks):
         self.concurrency_limit = concurrency_limit
         self.fn = fn
         self.safety_fn = safety_fn
+        self.safety_fn_2 = safety_fn_2
         self.is_async = inspect.iscoroutinefunction(self.fn) or inspect.isasyncgenfunction(self.fn)
         self.is_generator = inspect.isgeneratorfunction(self.fn) or inspect.isasyncgenfunction(self.fn)
         self.buttons: list[Button | None] = []
