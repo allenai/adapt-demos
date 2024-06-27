@@ -117,22 +117,26 @@ class SafetyClientHandler(ModelClientHandler):
             stream=False,
         )
 
-        # import ipdb; ipdb.set_trace()
         safety_labels = [
             [s.strip() for s in label.split(":")]
             for label in safety_response.choices[0].message.content.split("\n")
             if label.strip() and len(label.split(":")) > 1
         ]
 
-        safety_unwanted_labels = ["yes"] * len(safety_labels)
+        safety_label_styles = {"default": {"yes": "warning", "no": "success"}}
         if any(k for k, v in safety_labels if k.lower().startswith("response refusal")):
+            refusal_index = None
             for i, (k, v) in enumerate(safety_labels):
                 if k.lower().startswith("response refusal"):
-                    safety_unwanted_labels[i] = "no"
+                    safety_label_styles[k] = {"yes": "info", "no": "secondary"}
+                    refusal_index = i
+            if refusal_index is not None:
+                safety_labels.append(safety_labels.pop(refusal_index))
 
         safety_labels_html = "\n<br/>\n".join(
             [
-                f"<span style='color: black'>{key}</span>&nbsp;<span class='badge text-bg-{'warning' if label.lower() == safety_unwanted_labels[i] else 'success'}'>"  # noqa
+                f"<span style='color: black'>{key}</span>&nbsp;"
+                f"<span class='badge text-bg-{safety_label_styles.get(key, safety_label_styles['default'])}'>"  # noqa
                 f"{label.capitalize()}"
                 f"</span>"
                 for i, (key, label) in enumerate(safety_labels)
