@@ -20,7 +20,9 @@ from .model_client import (
     run_dummy_safety_filter,
 )
 from .prompts import WILDGUARD_INPUT_FORMAT
-from .style import css_style, theme
+from .style import css_style, Ai2Theme
+
+theme = Ai2Theme()
 
 All = [
     css_style,
