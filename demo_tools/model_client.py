@@ -136,7 +136,7 @@ class SafetyClientHandler(ModelClientHandler):
         safety_labels_html = "\n<br/>\n".join(
             [
                 f"<span style='color: black'>{key}</span>&nbsp;"
-                f"<span class='badge text-bg-{safety_label_styles.get(key, safety_label_styles['default'])}'>"  # noqa
+                f"<span class='badge text-bg-{safety_label_styles.get(key, safety_label_styles['default'])[label.lower()]}'>"  # noqa
                 f"{label.capitalize()}"
                 f"</span>"
                 for i, (key, label) in enumerate(safety_labels)
