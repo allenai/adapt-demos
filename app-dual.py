@@ -75,7 +75,7 @@ if args.safety_filter_port or args.safety_model:
     )
     SAFETY_FILTER_ON = True
 
-    safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
+    safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=False)
     reprompt_textarea = gr.TextArea(
         label="Prompt to make assistant safe if detected unsafe. Use placeholder {prompt} for user input and {response} for assistant response.",  # noqa
         value=MAKE_SAFE_PROMPT,
