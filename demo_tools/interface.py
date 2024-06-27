@@ -444,13 +444,13 @@ class EnhancedChatInterface(Blocks):
                 )
                 .then( # SAFETY NOT ENABLE IN SIDEBYSIDE
                     self.safety_fn,
-                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.saved_input, self.chatbot_state] + addition_inputs_1,
                     [self.safety_log, self.safe_response],
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                 )
                 .then(
                     self.safety_fn_2,
-                    [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
+                    [self.saved_input, self.chatbot_state_2] + addition_inputs_2,
                     [self.safety_log_2, self.safe_response_2],
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                 )
