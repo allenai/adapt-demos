@@ -932,7 +932,7 @@ def _cleanup_safe_response(safe_response: str) -> str:
     Returns:
         safe response text
     """
-    m = re.match(r'.*<div class="card-body safe-text">(.*)</div>.*', safe_response, re.MULTILINE)
+    m = re.match(r'.*<div class="card-body safe-text">(.+)</div>.*', safe_response, re.MULTILINE | re.DOTALL)
     if m is not None:
         safe_response = m.group(1).strip()
 
@@ -949,12 +949,12 @@ def _extract_safety_labels(safety_log: str) -> str | dict[str, str]:
         safety labels as a dict or as a str in case of errors
     """
     # errors displayed in <p> in safety logs
-    m = re.match(r".*<p.*>(.+)</p>.*", safety_log, re.MULTILINE)
+    m = re.match(r".*<p[^>]*>(.+)</p>.*", safety_log, re.MULTILINE | re.DOTALL)
     if m is not None:
-        safety_log = m.group(1)
+        safety_log = m.group(1).strip()
     else:
         # otherwise, logs are shown within <div>
-        m = re.match(r".*<div.*>(.+)</div>.*", safety_log, re.MULTILINE)
+        m = re.match(r"<div[^>]*>(.+)</div>", safety_log, re.MULTILINE | re.DOTALL)
         if m is not None:
             safety_labels = {}
             for label_html in m.group(1).split("\n<br/>\n"):
