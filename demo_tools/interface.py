@@ -967,18 +967,19 @@ def _extract_safety_labels(safety_log: str) -> str | dict[str, str]:
         safety labels as a dict or as a str in case of errors
     """
     # errors displayed in <p> in safety logs
-    m = re.match(r".*<div style[^>*]><p[^>]*>(.+)</p>\s*</div>.*", safety_log, re.MULTILINE | re.DOTALL)
+    m = re.match(r".*<div style[^>]*><p[^>]*>(.+)</p>\s*</div>.*", safety_log, re.MULTILINE | re.DOTALL)
     if m is not None:
         safety_log = m.group(1).strip()
     else:
         # otherwise, logs are shown within <div>
-        m = re.match(r"<div style[^>*]><div[^>]*>(.+)</div>\s*</div>.*", safety_log, re.MULTILINE | re.DOTALL)
+        m = re.match(r"<div style[^>]*><div[^>]*>(.+)</div>\s*</div>.*", safety_log, re.MULTILINE | re.DOTALL)
         if m is not None:
             safety_labels = {}
-            for label_html in m.group(1).split("\n<br/>\n"):
-                key = label_html[:label_html.index("<span") - 1].strip()
-                label = label_html[label_html.index(">") + 1:label_html.index("</span")].strip()
-                safety_labels[key] = label
+            for kv_html in m.group(1).split("\n<br/>\n"):
+                key_html, label_html = kv_html.split("&nbsp;")
+                key = key_html[key_html.index(">") + 1:key_html.index("</span")].strip()
+                value = label_html[label_html.index(">") + 1:label_html.index("</span")].strip()
+                safety_labels[key] = value
             return safety_labels
 
     return safety_log

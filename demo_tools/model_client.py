@@ -132,7 +132,7 @@ class SafetyClientHandler(ModelClientHandler):
 
         safety_labels_html = "\n<br/>\n".join(
             [
-                f"{key} <span class='badge text-bg-{'warning' if label.lower() == safety_unwanted_labels[i] else 'success'}'>"  # noqa
+                f"<span style='color: black'>{key}</span>&nbsp;<span class='badge text-bg-{'warning' if label.lower() == safety_unwanted_labels[i] else 'success'}'>"  # noqa
                 f"{label.capitalize()}"
                 f"</span>"
                 for i, (key, label) in enumerate(safety_labels)
@@ -143,7 +143,7 @@ class SafetyClientHandler(ModelClientHandler):
         safety_labels = OrderedDict(safety_labels)
         if not safety_labels or "Response refusal" not in safety_labels:
             logger.error(f"Safety class response cannot be parsed: " f"[{safety_response.choices[0].message.content}]")
-            safety_labels_html = "<p class='text-danger' style='color: red'>Safety response cannot be parsed, please try again</p>"
+            safety_labels_html = "<p class='text-danger'>Safety response cannot be parsed, please try again</p>"
             safe_response = ""
         elif (
             safety_labels[next(iter(safety_labels))].lower() == "yes"
@@ -151,20 +151,21 @@ class SafetyClientHandler(ModelClientHandler):
         ):
             refusal_rewrite_text = refusal_rewrite_text or MAKE_SAFE_PROMPT
 
-            reprompt_kwargs = {}
+            refusal_rewrite_kwargs = {}
             if "{prompt}" in refusal_rewrite_text:
-                reprompt_kwargs["prompt"] = last_query
+                refusal_rewrite_kwargs["prompt"] = last_query
             if "{response}" in refusal_rewrite_text:
-                reprompt_kwargs["response"] = last_response
+                refusal_rewrite_kwargs["response"] = last_response
 
-            if not reprompt_kwargs:
+            if not refusal_rewrite_kwargs:
                 logger.warning(
                     "Make safe prompt template does not include user input ({prompt}) or assistant response ({response})"  # noqa
                 )
-            make_response_safe_input = refusal_rewrite_text.format(**reprompt_kwargs)
-            logger.debug(" --- MAKE SAFE PROMPT ---")
-            logger.debug(make_response_safe_input)
-            logger.debug(" ---")
+            make_response_safe_input = refusal_rewrite_text.format(**refusal_rewrite_kwargs)
+            if self.debug:
+                logger.info(" --- MAKE SAFE PROMPT ---")
+                logger.info(make_response_safe_input)
+                logger.info(" ---")
             make_response_safe_openai_format = history_openai_format + [
                 {"role": "user", "content": make_response_safe_input}
             ]
@@ -174,6 +175,9 @@ class SafetyClientHandler(ModelClientHandler):
                 messages=make_response_safe_openai_format,
                 temperature=temperature,
             )
+
+            if not response.choices[0].message.content.strip():
+                logger.warning("Refusal rewrite response is empty")
 
             safe_response = f"""<div class="card text-bg-success white-background" style='background-color: white; padding: 10px;>
                         <h4 class="card-title safe-title">Safe Response</h4>
