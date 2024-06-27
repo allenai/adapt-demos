@@ -76,7 +76,7 @@ if args.safety_filter_port or args.safety_model:
 else:
     SAFETY_FILTER_ON = False
     logger.info("Safety filter: OFF")
-    
+
 # Custom style code
 js_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 css_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -106,6 +106,8 @@ demo = EnhancedChatInterface(
     safety_fn_2=safety_client_2.predict_safety if SAFETY_FILTER_ON else run_dummy_safety_filter,
     model_client_2=model_client_2,
     additional_inputs=additional_inputs,
+    head=header,
+    css=css,
     title="AI2 Internal Demo Model",
     description=f"""Model 1 (left): {args.model_one}
 
