@@ -26,6 +26,7 @@ import functools
 import inspect
 import json  # Added imports
 import os  # Added imports
+import re
 from typing import AsyncGenerator, Callable, Literal, Union, cast
 
 import anyio
@@ -870,11 +871,12 @@ class EnhancedChatInterface(Blocks):
             "metadata": {},  # TODO add safety metadata
         }
 
+        # log safety outputs
         if safety_log:
-            data_to_save["safety_log"] = safety_log
+            data_to_save["safety_log"] = _extract_safety_labels(safety_log)
 
         if safe_response:
-            data_to_save["safe_response"] = safe_response
+            data_to_save["safe_response"] = _cleanup_safe_response(safe_response)
 
         with open(file_path, "w") as f:
             json.dump(data_to_save, f, indent=4)
@@ -902,19 +904,64 @@ class EnhancedChatInterface(Blocks):
             "metadata": {},  # TODO add safety metadata
         }
 
+        # log safety outputs
         if safety_log:
-            data_to_save["safety_log"] = safety_log
+            data_to_save["safety_log"] = _extract_safety_labels(safety_log)
 
         if safe_response:
-            data_to_save["safe_response"] = safe_response
+            data_to_save["safe_response"] = _cleanup_safe_response(safe_response)
 
         if safety_log_2:
-            data_to_save["safety_log_2"] = safety_log_2
+            data_to_save["safety_log_2"] = _extract_safety_labels(safety_log_2)
 
         if safe_response_2:
-            data_to_save["safe_response_2"] = safe_response_2
+            data_to_save["safe_response_2"] = _cleanup_safe_response(safe_response_2)
 
         with open(file_path, "w") as f:
             json.dump(data_to_save, f, indent=4)
 
         return "Conversation saved successfully!"
+
+
+def _cleanup_safe_response(safe_response: str) -> str:
+    """
+    extracts safe response text from HTML
+    Args:
+        safe_response: HTML of safe response
+
+    Returns:
+        safe response text
+    """
+    m = re.match(r'.*<div class="card-body safe-text">(.*)</div>.*', safe_response, re.MULTILINE)
+    if m is not None:
+        safe_response = m.group(1).strip()
+
+    return safe_response
+
+
+def _extract_safety_labels(safety_log: str) -> str | dict[str, str]:
+    """
+    extracts safety labels text from HTML
+    Args:
+        safety_log: HTML of safety classifier output
+
+    Returns:
+        safety labels as a dict or as a str in case of errors
+    """
+    # errors displayed in <p> in safety logs
+    m = re.match(r".*<p.*>(.+)</p>.*", safety_log, re.MULTILINE)
+    if m is not None:
+        safety_log = m.group(1)
+    else:
+        # otherwise, logs are shown within <div>
+        m = re.match(r".*<div.*>(.+)</div>.*", safety_log, re.MULTILINE)
+        if m is not None:
+            safety_labels = {}
+            for label_html in m.group(1).split("\n<br/>\n"):
+                key = label_html[:label_html.index("<span") - 1].strip()
+                label = label_html[label_html.index(">") + 1:label_html.index("</span")].strip()
+                safety_labels[key] = label
+            return safety_labels
+
+    return safety_log
+
