@@ -210,7 +210,7 @@ class EnhancedChatInterface(Blocks):
 
                 if self.side_by_side:
                     with Column(scale=3):
-                        Markdown("")
+                        Markdown("<h1 style='margin-bottom: 1rem'></h1>")
                         if description_2:
                             Markdown(description_2)
 

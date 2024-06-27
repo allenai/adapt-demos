@@ -110,8 +110,8 @@ demo = EnhancedChatInterface(
     head=header,
     css=css,
     title="AI2 Internal Demo Model",
-    description=f"Model 1: {Path(args.model_one).parent}",
-    description_2=f"Model 2: {Path(args.model_two).parent}",
+    description=f"Model 1: {Path(args.model_one).parent.name}",
+    description_2=f"Model 2: {Path(args.model_two).parent.name}",
 )
 
 demo.queue().launch(share=True)
