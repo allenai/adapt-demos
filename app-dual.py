@@ -35,6 +35,8 @@ parser.add_argument("--port_one", type=int, default=8000, help="Port to connect 
 parser.add_argument("--port_two", type=int, required=True, default=8001, help="Port to connect to second inference server")
 parser.add_argument("--model_one", type=str, required=True, help="Model to connect to")
 parser.add_argument("--model_two", type=str, required=False, help="Second model")
+parser.add_argument("--model_name_one", type=str, default=None, help="Model name to appear on header")
+parser.add_argument("--model_name_two", type=str, default=None, help="Second model name to appear on header")
 parser.add_argument("--completion_mode", action="store_true", default=False, help="Use completion mode for OpenAI API")
 parser.add_argument(
     "--safety_filter_port", type=int, required=False, default=None, help="Port to connect to safety filter server"
@@ -109,8 +111,8 @@ demo = EnhancedChatInterface(
     head=header,
     css=css,
     title="AI2 Internal Demo Model",
-    description=f"Model 1: {args.model_one}",
-    description_2=f"Model 2: {args.model_two}",
+    description=f"Model 1: {args.model_name_one or args.model_one}",
+    description_2=f"Model 2: {args.model_name_two or args.model_two}",
 )
 
 demo.queue().launch(share=True)
