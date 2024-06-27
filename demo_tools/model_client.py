@@ -143,7 +143,7 @@ class SafetyClientHandler(ModelClientHandler):
         safety_labels = OrderedDict(safety_labels)
         if not safety_labels or "Response refusal" not in safety_labels:
             logger.error(f"Safety class response cannot be parsed: " f"[{safety_response.choices[0].message.content}]")
-            safety_labels_html = "<p class='text-danger'>Safety response cannot be parsed, please try again</p>"
+            safety_labels_html = "<p class='text-danger' style='color: red'>Safety response cannot be parsed, please try again</p>"
             safe_response = ""
         elif (
             safety_labels[next(iter(safety_labels))].lower() == "yes"
