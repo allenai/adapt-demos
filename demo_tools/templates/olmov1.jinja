@@ -1,6 +1,8 @@
 {{ eos_token }}
 {% for message in messages %}
-    {% if message['role'] == 'user' %}
+    {% if message['role'] == 'system' %}
+        {{ '<|system|>\n' + message['content'] }}
+    {% elif message['role'] == 'user' %}
         {{ '<|user|>\n' + message['content'] }}
     {% elif message['role'] == 'assistant' %}
         {{ '<|assistant|>\n'  + message['content'] + eos_token }}

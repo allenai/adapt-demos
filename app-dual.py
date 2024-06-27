@@ -18,7 +18,7 @@ import gradio as gr
 
 from demo_tools import (
     ModelClientHandler,
-    SafetyChatInterface,
+    EnhancedChatInterface,
     run_dummy_safety_filter,
 )
 
@@ -42,10 +42,12 @@ model_client_2 = ModelClientHandler(args.model_two, api_key, args.port_two, debu
 temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
 safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=False)
 
-demo = SafetyChatInterface(
+demo = EnhancedChatInterface(
     fn=model_client.predict,
     safety_fn=run_dummy_safety_filter, # no safety filter on side-by-side demo
+    model_client=model_client,
     fn_2=model_client_2.predict,
+    model_client_2=model_client_2,
     additional_inputs=[temperature_slider, safety_filter_checkbox],
     title="AI2 Internal Demo Model",
     description=f"""Model 1 (left): {args.model_one}
