@@ -18,6 +18,8 @@ import logging
 import gradio as gr
 
 from demo_tools import (
+    css_style,
+    theme,
     ModelClientHandler,
     SafetyClientHandler,
     EnhancedChatInterface,
@@ -50,8 +52,10 @@ model_client = ModelClientHandler(args.model_one, api_key, args.port_one, debug=
 model_client_2 = ModelClientHandler(args.model_two, api_key, args.port_two, debug=args.debug, stream=True)
 
 # Launch Gradio app
+system_prompt_1 = gr.Textbox(label="Left System Prompt", placeholder="You are a helpful assistant, please respond to the user prompt.")
+system_prompt_2 = gr.Textbox(label="Right System Prompt", placeholder="You are a helpful assistant, please respond to the user prompt.")
 temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
-additional_inputs = [temperature_slider]
+additional_inputs = [system_prompt_1, system_prompt_2, temperature_slider]
 
 if args.safety_filter_port or args.safety_model:
     # if one of them, both need to be set
@@ -107,11 +111,12 @@ demo = EnhancedChatInterface(
     safety_fn_2=safety_client_2.predict_safety if SAFETY_FILTER_ON else run_dummy_safety_filter,
     model_client_2=model_client_2,
     additional_inputs=additional_inputs,
-    head=header,
-    css=css,
-    title="AI2 Internal Demo Model",
+    title="AI2 Internal Model Demo",
     description=f"Model 1: {args.model_name_one or args.model_one}",
     description_2=f"Model 2: {args.model_name_two or args.model_two}",
+    css=css_style,
+    theme=theme,
+    concurrency_limit=4,
 )
 
-demo.queue().launch(share=True)
+demo.queue().launch(allowed_paths=['demo_tools/'], share=True)

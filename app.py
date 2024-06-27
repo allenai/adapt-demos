@@ -21,7 +21,9 @@ from demo_tools import (
     EnhancedChatInterface,
     ModelClientHandler,
     SafetyClientHandler,
+    css_style,
     run_dummy_safety_filter,
+    theme,
 )
 from demo_tools.prompts import MAKE_SAFE_PROMPT
 
@@ -44,8 +46,13 @@ args = parser.parse_args()
 api_key = "EMPTY"  # OpenAI API key (empty for custom server)
 model_client = ModelClientHandler(args.model, api_key, args.port, debug=args.debug, stream=True)
 
+# Additional inputs
 temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
-additional_inputs = [temperature_slider]
+system_prompt = gr.Textbox(
+    label="System Prompt", placeholder="You are a helpful assistant, please respond to the user prompt."
+)
+
+additional_inputs = [system_prompt, temperature_slider]
 
 if args.safety_filter_port or args.safety_model:
     # if one of them, both need to be set
@@ -58,12 +65,12 @@ if args.safety_filter_port or args.safety_model:
     SAFETY_FILTER_ON = True
 
     safety_filter_checkbox = gr.Checkbox(label="Run Safety Filter", value=SAFETY_FILTER_ON)
-    reprompt_textarea = gr.TextArea(
+    refusal_rewrite_text = gr.TextArea(
         label="Prompt to make assistant safe if detected unsafe. Use placeholder {prompt} for user input and {response} for assistant response.",  # noqa
         value=MAKE_SAFE_PROMPT,
         lines=12,
     )
-    additional_inputs += [safety_filter_checkbox, reprompt_textarea]
+    additional_inputs += [safety_filter_checkbox, refusal_rewrite_text]
     logger.info(f"Safety filter: ON, connecting to {safety_client.model_url}")
 else:
     SAFETY_FILTER_ON = False
@@ -78,30 +85,18 @@ header = f"""
 <script src="{js_url}" crossorigin="anonymous"></script>
 """
 
-css = """
-.classifier-text {
-    font-size: 20px !important;
-}
-.safe-text {
-    font-size: 16px !important;
-    color: white;
-}
-.safe-title {
-    color: white;
-}
-"""
-
 # Launch Gradio app
 demo = EnhancedChatInterface(
     model_client.predict,
     safety_client.predict_safety if SAFETY_FILTER_ON else run_dummy_safety_filter,
     model_client=model_client,
     additional_inputs=additional_inputs,
-    title="AI2 Internal Demo Model",
-    description=f"Model: {args.model}\n\nSafety Model: {args.safety_model}",
+    title="AI2 Internal Model Demo",
     head=header,
     fill_height=False,  # not implemented correctly with safety metadata
-    css=css,
+    css=css_style,
+    theme=theme,
+    concurrency_limit=4,
 )
 
-demo.queue().launch(share=True)
+demo.queue().launch(allowed_paths=["demo_tools//"], share=True)

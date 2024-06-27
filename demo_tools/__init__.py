@@ -20,8 +20,11 @@ from .model_client import (
     run_dummy_safety_filter,
 )
 from .prompts import WILDGUARD_INPUT_FORMAT
+from .style import css_style, theme
 
 All = [
+    css_style,
+    theme,
     MockOpenAI,
     MockOpenAIStream,
     ModelClientHandler,
