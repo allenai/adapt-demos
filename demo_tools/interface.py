@@ -214,20 +214,20 @@ class EnhancedChatInterface(Blocks):
                         self.chatbot = Chatbot(label="Chatbot", scale=1, height=700 if fill_height else None)
                     with Column():
                         self.chatbot_2 = Chatbot(label="Chatbot 2", scale=1, height=700 if fill_height else None)
-                # Safety content current disabled for side-by-side, finale design TBD
-                # with Row():
-                #     with Column():
-                #         self.safety_log = Markdown("Safety content to appear here")
+                # Safety content
+                with Row():
+                    with Column():
+                        self.safety_log = Markdown("Safety content to appear here")
 
-                #         self.safe_response = Markdown(
-                #             "If assistant response is detected as harmful, a safe version would appear here"
-                #         )
-                #     with Column():
-                #         self.safety_log_2 = Markdown("Safety content to appear here")
+                        self.safe_response = Markdown(
+                            "If assistant response is detected as harmful, a safe version would appear here"
+                        )
+                    with Column():
+                        self.safety_log_2 = Markdown("Safety content to appear here")
 
-                #         self.safe_response_2 = Markdown(
-                #             "If assistant response is detected as harmful, a safe version would appear here"
-                #         )
+                        self.safe_response_2 = Markdown(
+                            "If assistant response is detected as harmful, a safe version would appear here"
+                        )
             ##############################
             else:
                 with Row():
@@ -415,21 +415,23 @@ class EnhancedChatInterface(Blocks):
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                     show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                 )
-                # .then( # SAFETY NOT ENABLE IN SIDEBYSIDE
-                #     self.safety_fn,
-                #     [self.saved_input, self.chatbot_state] + self.additional_inputs,
-                #     [self.safety_log, self.safe_response],
-                #     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
-                # )
-                # .then(
-                #     self.safety_fn,
-                #     [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
-                #     [self.safety_log_2, self.safe_response_2],
-                #     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
-                # )
+                .then( # SAFETY NOT ENABLE IN SIDEBYSIDE
+                    self.safety_fn,
+                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.safety_log, self.safe_response],
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                )
+                .then(
+                    self.safety_fn,
+                    [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
+                    [self.safety_log_2, self.safe_response_2],
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                )
                 .then(
                     self._save_dual_conversation,
-                    inputs=[self.chatbot_state, self.chatbot_state_2],
+                    inputs=[
+                        self.chatbot_state, self.chatbot_state_2, self.safety_log, self.safe_response, self.safety_log_2, self.safe_response_2
+                    ],
                     outputs=[],
                     show_api=False,
                 )
@@ -468,7 +470,7 @@ class EnhancedChatInterface(Blocks):
                 )  # SAVING DATA BELOW
                 .then(
                     self._save_single_conversation,
-                    inputs=[self.chatbot_state],
+                    inputs=[self.chatbot_state, self.safety_log, self.safe_response],
                     outputs=[],
                     show_api=False,
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
@@ -839,7 +841,7 @@ class EnhancedChatInterface(Blocks):
         return history, message or "", history
 
     # below added by nathanl@
-    def _save_single_conversation(self, chat_history):
+    def _save_single_conversation(self, chat_history, safety_log, safe_response):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         debug_mode = self.model_client.debug
 
@@ -860,12 +862,20 @@ class EnhancedChatInterface(Blocks):
             "metadata": {},  # TODO add safety metadata
         }
 
+        if safety_log:
+            data_to_save["safety_log"] = safety_log
+
+        if safe_response:
+            data_to_save["safe_response"] = safe_response
+
         with open(file_path, "w") as f:
             json.dump(data_to_save, f, indent=4)
 
         return "Conversation saved successfully!"
 
-    def _save_dual_conversation(self, chat_history, chat_history_2):
+    def _save_dual_conversation(
+            self, chat_history, chat_history_2, safety_log, safe_response, safety_log_2, safe_response_2
+    ):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         debug_mode = self.model_client.debug
 
@@ -883,6 +893,18 @@ class EnhancedChatInterface(Blocks):
             "debug": debug_mode,
             "metadata": {},  # TODO add safety metadata
         }
+
+        if safety_log:
+            data_to_save["safety_log"] = safety_log
+
+        if safe_response:
+            data_to_save["safe_response"] = safe_response
+
+        if safety_log_2:
+            data_to_save["safety_log_2"] = safety_log_2
+
+        if safe_response_2:
+            data_to_save["safe_response_2"] = safe_response_2
 
         with open(file_path, "w") as f:
             json.dump(data_to_save, f, indent=4)
