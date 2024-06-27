@@ -201,7 +201,12 @@ class EnhancedChatInterface(Blocks):
             with Row():
                 with Column(scale=3):
                     if title:
-                        Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
+                        title_str = f"""<div style="display: flex; align-items: center;">
+                                        <img src="/file=demo_tools/assets/ai2-logo.png" style="width: 25px; height: 25px; margin-top: 10px; margin-bottom: -7px; margin-right: 5px;">
+                                        <h1 style="margin-bottom: 1rem; color:white">{self.title}</h1>
+                                    </div>"""
+                        # Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
+                        Markdown(title_str)  # removed text-align: center;
                     if description:
                         Markdown(description)
                 # with Column(scale=2):
@@ -211,9 +216,19 @@ class EnhancedChatInterface(Blocks):
             if self.side_by_side:
                 with Row():
                     with Column():
-                        self.chatbot = Chatbot(label="Chatbot", scale=1, height=700 if fill_height else None)
+                        self.chatbot = Chatbot(
+                            label=f"Model: {self.model_client.model}",
+                            scale=1,
+                            height=700 if fill_height else None,
+                            show_share_button=True,
+                        )
                     with Column():
-                        self.chatbot_2 = Chatbot(label="Chatbot 2", scale=1, height=700 if fill_height else None)
+                        self.chatbot_2 = Chatbot(
+                            label=f"Model: {self.model_client_2.model}",
+                            scale=1,
+                            height=700 if fill_height else None,
+                            show_share_button=True,
+                        )
                 # Safety content current disabled for side-by-side, finale design TBD
                 # with Row():
                 #     with Column():
@@ -235,13 +250,19 @@ class EnhancedChatInterface(Blocks):
                         if chatbot:
                             self.chatbot = chatbot.render()
                         else:
-                            self.chatbot = Chatbot(label="Chatbot", scale=1, height="40%" if fill_height else None)
+                            self.chatbot = Chatbot(
+                                label=f"Model: {self.model_client.model}",
+                                scale=1,
+                                height="40%" if fill_height else None,
+                                show_share_button=True,
+                            )
 
                     with Column(scale=1):
-                        self.safety_log = Markdown("Safety content to appear here")
-
+                        self.safety_log = Markdown(
+                            "<div style='background-color: white; padding: 10px;'>Safety content to appear here</div>"
+                        )
                         self.safe_response = Markdown(
-                            "If assistant response is detected as harmful, a safe version would appear here"
+                            "<div style='background-color: white; padding: 10px;'>If assistant response is detected as harmful, a safe version would appear here</div>"
                         )
 
             with Row():
@@ -250,7 +271,7 @@ class EnhancedChatInterface(Blocks):
                         if isinstance(btn, Button):
                             btn.render()
                         elif isinstance(btn, str):
-                            btn = Button(btn, variant="secondary", size="sm", min_width=60)
+                            btn = Button(btn, variant="primary", size="sm", min_width=60)
                         else:
                             raise ValueError(
                                 f"All the _btn parameters must be a gr.Button, string, or None, not {type(btn)}"
@@ -297,7 +318,7 @@ class EnhancedChatInterface(Blocks):
                                 submit_btn,
                                 variant="primary",
                                 scale=1,
-                                min_width=150,
+                                min_width=135,
                             )
                         else:
                             raise ValueError(
@@ -313,7 +334,7 @@ class EnhancedChatInterface(Blocks):
                                 variant="stop",
                                 visible=False,
                                 scale=1,
-                                min_width=150,
+                                min_width=135,
                             )
                         else:
                             raise ValueError(
@@ -376,6 +397,8 @@ class EnhancedChatInterface(Blocks):
         submit_triggers = [self.textbox.submit, self.submit_btn.click] if self.submit_btn else [self.textbox.submit]
         ######### ######### ######### ######### #########
         if self.side_by_side:
+            addition_inputs_1 = [self.additional_inputs[0]] + self.additional_inputs[2:]
+            addition_inputs_2 = [self.additional_inputs[1]] + self.additional_inputs[2:]
             submit_event = (
                 on(
                     submit_triggers,
@@ -401,7 +424,7 @@ class EnhancedChatInterface(Blocks):
                 )
                 .then(
                     submit_fn,
-                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.saved_input, self.chatbot_state] + addition_inputs_1,
                     [self.chatbot, self.chatbot_state],
                     show_api=False,
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
@@ -409,7 +432,7 @@ class EnhancedChatInterface(Blocks):
                 )
                 .then(
                     submit_fn,
-                    [self.saved_input, self.chatbot_state] + self.additional_inputs,
+                    [self.saved_input, self.chatbot_state] + addition_inputs_2,
                     [self.chatbot_2, self.chatbot_state_2],
                     show_api=False,
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
