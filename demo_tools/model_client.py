@@ -186,7 +186,7 @@ class SafetyClientHandler(ModelClientHandler):
                 safe_response = "NOTE: FILTER OFF IN DEBUG MODE.\n"
 
         # modify the responses with html for white background
-        safety_labels_html = f"<div style='background-color: white; color: black; padding: 10px;>{safety_labels_html}</div>"
+        safety_labels_html = f"<div style='background-color: white; color: black; padding: 10px;'>{safety_labels_html}</div>"
         safe_response = f"<div style='background-color: white; padding: 10px;>{safe_response}</div>"
 
         return HTML(safety_labels_html), HTML(safe_response)
