@@ -31,6 +31,13 @@ css_style = """
 footer {visibility: hidden}
 """
 
+js_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+css_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+header = f"""
+<link rel="stylesheet" href="{css_url}">
+<script src="{js_url}" crossorigin="anonymous"></script>
+"""
+
 theme = gr.themes.Soft(
     primary_hue=gr.themes.colors.pink,
     secondary_hue=gr.themes.colors.emerald,

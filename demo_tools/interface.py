@@ -93,7 +93,6 @@ class EnhancedChatInterface(Blocks):
         examples_per_page: int = 10,
         title: str | None = None,
         description: str | None = None,
-        description_2: str | None = None,
         theme: Theme | str | None = None,
         css: str | None = None,
         js: str | None = None,
@@ -211,29 +210,24 @@ class EnhancedChatInterface(Blocks):
                     # Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
                     Markdown(title_str)  # removed text-align: center;
 
-            with Row():
-                with Column(3):
-                    if description:
+            if description:
+                with Row():
+                    with Column(3):
                         Markdown(description)
-
-                if self.side_by_side:
-                    with Column(scale=3):
-                        if description_2:
-                            Markdown(description_2)
 
             ##############################
             if self.side_by_side:
                 with Row():
                     with Column():
                         self.chatbot = Chatbot(
-                            label=f"Model: {self.model_client.model}",
+                            label=f"Model: {self.model_client.model_name}",
                             scale=1,
                             height=700 if fill_height else None,
                             show_share_button=True,
                         )
                     with Column():
                         self.chatbot_2 = Chatbot(
-                            label=f"Model: {self.model_client_2.model}",
+                            label=f"Model: {self.model_client_2.model_name}",
                             scale=1,
                             height=700 if fill_height else None,
                             show_share_button=True,

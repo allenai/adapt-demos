@@ -22,6 +22,7 @@ from demo_tools import (
     ModelClientHandler,
     SafetyClientHandler,
     css_style,
+    header,
     run_dummy_safety_filter,
     theme,
 )
@@ -77,14 +78,6 @@ else:
     logger.info("Safety filter: OFF")
 
 
-# Custom style code
-js_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-css_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-header = f"""
-<link rel="stylesheet" href="{css_url}">
-<script src="{js_url}" crossorigin="anonymous"></script>
-"""
-
 # Launch Gradio app
 demo = EnhancedChatInterface(
     model_client.predict,
@@ -92,9 +85,9 @@ demo = EnhancedChatInterface(
     model_client=model_client,
     additional_inputs=additional_inputs,
     title="AI2 Internal Model Demo",
-    head=header,
     fill_height=False,  # not implemented correctly with safety metadata
     css=css_style,
+    head=header,
     theme=theme,
     concurrency_limit=4,
 )

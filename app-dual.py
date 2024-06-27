@@ -19,6 +19,7 @@ import gradio as gr
 
 from demo_tools import (
     css_style,
+    header,
     theme,
     ModelClientHandler,
     SafetyClientHandler,
@@ -82,26 +83,6 @@ else:
     SAFETY_FILTER_ON = False
     logger.info("Safety filter: OFF")
 
-# Custom style code
-js_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-css_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-header = f"""
-<link rel="stylesheet" href="{css_url}">
-<script src="{js_url}" crossorigin="anonymous"></script>
-"""
-
-css = """
-.classifier-text {
-    font-size: 20px !important;
-}
-.safe-text {
-    font-size: 16px !important;
-    color: white;
-}
-.safe-title {
-    color: white;
-}
-"""
 
 demo = EnhancedChatInterface(
     fn=model_client.predict,
@@ -112,8 +93,7 @@ demo = EnhancedChatInterface(
     model_client_2=model_client_2,
     additional_inputs=additional_inputs,
     title="AI2 Internal Model Demo",
-    description=f"Model 1: {args.model_name_one or args.model_one}",
-    description_2=f"Model 2: {args.model_name_two or args.model_two}",
+    head=header,
     css=css_style,
     theme=theme,
     concurrency_limit=4,
