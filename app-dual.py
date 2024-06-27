@@ -14,7 +14,6 @@
 
 import argparse
 import logging
-from pathlib import Path
 
 import gradio as gr
 
@@ -110,8 +109,8 @@ demo = EnhancedChatInterface(
     head=header,
     css=css,
     title="AI2 Internal Demo Model",
-    description=f"Model 1: {Path(args.model_one).parent.name}",
-    description_2=f"Model 2: {Path(args.model_two).parent.name}",
+    description=f"Model 1: {args.model_one}",
+    description_2=f"Model 2: {args.model_two}",
 )
 
 demo.queue().launch(share=True)

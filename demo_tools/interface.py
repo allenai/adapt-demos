@@ -202,15 +202,16 @@ class EnhancedChatInterface(Blocks):
 
         with self:
             with Row():
+                if title:
+                    Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
+
+            with Row():
                 with Column(scale=3):
-                    if title:
-                        Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
                     if description:
                         Markdown(description)
 
                 if self.side_by_side:
                     with Column(scale=3):
-                        Markdown("<h1 style='margin-bottom: 1rem'></h1>")
                         if description_2:
                             Markdown(description_2)
 
