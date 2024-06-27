@@ -49,8 +49,12 @@ args = parser.parse_args()
 # OpenAI configuration
 api_key = "EMPTY"  # OpenAI API key (empty for custom server)
 
-model_client = ModelClientHandler(args.model_one, api_key, args.port_one, debug=args.debug, stream=True)
-model_client_2 = ModelClientHandler(args.model_two, api_key, args.port_two, debug=args.debug, stream=True)
+model_client = ModelClientHandler(
+    args.model_one, api_key, args.port_one, args.model_name_one, debug=args.debug, stream=True
+)
+model_client_2 = ModelClientHandler(
+    args.model_two, api_key, args.port_two, args.model_name_two, debug=args.debug, stream=True
+)
 
 # Launch Gradio app
 system_prompt_1 = gr.Textbox(label="Left System Prompt", placeholder="You are a helpful assistant, please respond to the user prompt.")

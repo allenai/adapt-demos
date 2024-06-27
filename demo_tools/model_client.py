@@ -29,9 +29,10 @@ def run_dummy_safety_filter(message, history, temperature, safety_filter_checkbo
 
 
 class ModelClientHandler:
-    def __init__(self, model, api_key, port, debug=False, stream=True):
+    def __init__(self, model, api_key, port, model_name=None, debug=False, stream=True):
         self.model_url = f"http://localhost:{port}/v1"
         self.model = model
+        self.model_name = model_name or model
         self.debug = debug
         if debug:
             if stream:

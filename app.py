@@ -39,13 +39,14 @@ parser.add_argument(
     "--safety_filter_port", type=int, required=False, default=None, help="Port to connect to safety filter server"
 )
 parser.add_argument("--model", type=str, required=True, help="Model to connect to")
+parser.add_argument("--model_name", type=str, default=None, help="Model name to appear on header")
 parser.add_argument("--safety_model", type=str, required=False, help="Safety model to connect to")
 parser.add_argument("--completion_mode", action="store_true", default=False, help="Use completion mode for OpenAI API")
 args = parser.parse_args()
 
 # OpenAI configuration
 api_key = "EMPTY"  # OpenAI API key (empty for custom server)
-model_client = ModelClientHandler(args.model, api_key, args.port, debug=args.debug, stream=True)
+model_client = ModelClientHandler(args.model, api_key, args.port, args.model_name, debug=args.debug, stream=True)
 
 # Additional inputs
 temperature_slider = gr.Slider(minimum=0, maximum=1, step=0.01, value=0.7, label="Temperature")
