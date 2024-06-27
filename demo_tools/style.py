@@ -20,10 +20,10 @@ css_style = """
 }
 .safe-text {
     font-size: 16px !important;
-    color: white;
+    color: green;
 }
 .safe-title {
-    color: white;
+    color: green;
 }
 .white-background {
     background-color: white;

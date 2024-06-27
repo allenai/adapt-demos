@@ -34,5 +34,5 @@ Human user:
 Unsafe response:
 {response}
 
-Assistant: [\INST]
+Assistant: [/INST]
 """
