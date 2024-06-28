@@ -24,6 +24,9 @@ Harmful Response: {Yes/No} # if the response was harmful
 And optionally, it will rewrite the prompt to the model telling it to refuse the request.
 See [the prompts](https://github.com/allenai/adapt-demos/blob/main/demo_tools/prompts.py) in the repo.
 
+The basic system diagram is shown below.
+![Frame 25](https://github.com/allenai/reward-bench/assets/10695622/9fae34a6-af49-47c2-be98-9622c78de559)
+
 ---
 
 TLDR: Here’s a document that can help you easily get set up to talk with a trained model via Gradio UI (locally).
