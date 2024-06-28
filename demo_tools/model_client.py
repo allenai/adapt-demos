@@ -124,6 +124,16 @@ class SafetyClientHandler(ModelClientHandler):
         ]
 
         safety_label_styles = {"default": {"yes": "warning", "no": "success"}}
+
+        def _display_safety_label(key: str, lbl: str) -> str:
+            return (
+                f"<span style='color: black'>{key}</span>&nbsp;"\
+                f"<span class='badge text-bg-{safety_label_styles.get(key, safety_label_styles['default'])[lbl.lower()]}'>"  # noqa
+                f"{lbl.capitalize()}"
+                f"</span>"
+            )
+
+        safety_labels_html = None
         if any(k for k, v in safety_labels if k.lower().startswith("response refusal")):
             refusal_index = None
             for i, (k, v) in enumerate(safety_labels):
@@ -131,17 +141,21 @@ class SafetyClientHandler(ModelClientHandler):
                     safety_label_styles[k] = {"yes": "info", "no": "secondary"}
                     refusal_index = i
             if refusal_index is not None:
-                safety_labels.append(safety_labels.pop(refusal_index))
+                refusal_key, refusal_label = safety_labels.pop(refusal_index)
+                safety_labels_html = "\n<br/>\n".join(
+                    [
+                        _display_safety_label(key, label)
+                        for i, (key, label) in enumerate(safety_labels)
+                    ]
+                ) + "\n<hr/>\n" + _display_safety_label(refusal_key, refusal_label)
 
-        safety_labels_html = "\n<br/>\n".join(
-            [
-                f"<span style='color: black'>{key}</span>&nbsp;"
-                f"<span class='badge text-bg-{safety_label_styles.get(key, safety_label_styles['default'])[label.lower()]}'>"  # noqa
-                f"{label.capitalize()}"
-                f"</span>"
-                for i, (key, label) in enumerate(safety_labels)
-            ]
-        )
+        if not safety_labels_html:
+            safety_labels_html = "\n<br/>\n".join(
+                [
+                    _display_safety_label(key, label)
+                    for i, (key, label) in enumerate(safety_labels)
+                ]
+            )
         safety_labels_html = f"<div class='classifier-text'>{safety_labels_html}</div>"
 
         safety_labels = OrderedDict(safety_labels)

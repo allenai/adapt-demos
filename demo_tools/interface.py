@@ -979,7 +979,7 @@ def _extract_safety_labels(safety_log: str) -> str | dict[str, str]:
         m = re.match(r"<div style[^>]*><div[^>]*>(.+)</div>\s*</div>.*", safety_log, re.MULTILINE | re.DOTALL)
         if m is not None:
             safety_labels = {}
-            for kv_html in m.group(1).split("\n<br/>\n"):
+            for kv_html in re.split("\n<[bh]r/>\n", m.group(1), re.MULTILINE):
                 key_html, label_html = kv_html.split("&nbsp;")
                 key = key_html[key_html.index(">") + 1:key_html.index("</span")].strip()
                 value = label_html[label_html.index(">") + 1:label_html.index("</span")].strip()
