@@ -1,22 +1,50 @@
 
-# OE Adapt Demo Tools
+# AI2 Adapt Demo Tools
 
-TLDR: We need to do vibe checks on the models we’re using. Here’s a document that can help you easily get set up to talk with a trained model via Gradio UI (locally).
+An important part of modern language model (LM) research is making tools that are easy to use and effective.
+In this repo, we have our lightweight Gradio tools for completing many needed tasks for vibe-checking your model.
+
+The core features we implemented included:
+* Default Gradio ChatInterface behavior plugged into a VLLM OpenAI endpoint.
+* Inclusion of safety-filter models, including classifying prompt or generation, re-writing, and other behavior.
+* Saving of conversations with the user.
+* Side-by-side comparison of multiple models with custom system prompts.
+
+Here is an example:
+
+![Screenshot 2024-06-27 at 3 48 51 PM](https://github.com/allenai/reward-bench/assets/10695622/2781011a-6b5e-4faf-8cc0-e972a2e8457f)
+
+With additional UX elements not shown for the safety filter. 
+When the safety filter is enabled, the expanded window will show:
+```
+Harmful Request: {Yes/No} # if the prompt is harmful
+Response Refusal: {Yes/No} # if the model refused a harmful prompt
+Harmful Response: {Yes/No} # if the response was harmful
+```
+And optionally, it will rewrite the prompt to the model telling it to refuse the request.
+See [the prompts](https://github.com/allenai/adapt-demos/blob/main/demo_tools/prompts.py) in the repo.
+
+---
+
+TLDR: Here’s a document that can help you easily get set up to talk with a trained model via Gradio UI (locally).
 
 ## References & Setup
 
-- [VLLM endpoint docs](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) 
+* [VLLM endpoint docs](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) 
 
-- Image for now: 
+* Image for now: 
 
-  - [nathanl/rb\_v16](https://beaker.org/im/01HW5Y0TXPAHCGTMH8MTA14QKH/details) (has latest VLLM from source), but TODO make a new lightweight image for this
+  * [nathanl/rb\_v20](https://beaker.org/im/01J15RB4DZC5QJJ4R51GMHMD00/details) (has latest VLLM from source), but TODO make a new lightweight image for this
 
-  - [nathanl/vllm\_image](https://beaker.org/im/01HW8PSRJ9CHVG8HMV5RESK265/details) (for VLLM + latest OLMo models - transformers v4.40)
+  * TODO Recreate [nathanl/vllm\_image](https://beaker.org/im/01HW8PSRJ9CHVG8HMV5RESK265/details) (for VLLM + latest OLMo models - transformers v4.40)
 
-- [Exposing port with Beaker](https://beaker-docs.apps.allenai.org/interactive/configuration.html#exposing-ports)  --port 8000
+* [Exposing port with Beaker](https://beaker-docs.apps.allenai.org/interactive/configuration.html#exposing-ports)  --port 8000
 
-- [Gradio app we use](https://huggingface.co/spaces/ai2-adapt-dev/chat-demo-example) (please contribute improvements!)
+* [WildGuard Repo](https://github.com/allenai/wildguard) More information on the safety models
 
+    * [WildGaurd Model](https://huggingface.co/allenai/wildguard) based on Mistral 7B
+
+    * More models coming soon
 
 ## Developing
 
@@ -24,19 +52,20 @@ To develop in this library, first make a new Conda environement:
 ```
 conda create -n chat_tools python=3.10
 ```
-Next, install with editable mode.
+Next, install with editable mode (or not).
 ```
+pip install -e .
+```
+Requirements are in [`pyproject.toml`](https://github.com/allenai/adapt-demos/blob/main/pyproject.toml).
 
+### Additions?
 
-### TODO
+_To add or request new features, please [open an issue](https://github.com/allenai/adapt-demos/issues/new/choose)._
 
-Some important features are needed in the gradio app (preferably via gui rather than argparse)
-
-1. Ability to edit system prompts 
-
-2. Ability to edit sampling parameters
 
 ## Workflow
+
+Much of this workflow is specific to AI2 tools, but largely the system can be extended arbitrarily. 
 
 ### Beaker interactive session
 
