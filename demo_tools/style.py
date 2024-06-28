@@ -24,15 +24,23 @@ css_style = """
 }
 .safe-text {
     font-size: 16px !important;
-    color: white;
+    color: green;
 }
 .safe-title {
-    color: white;
+    color: green;
 }
 .white-background {
     background-color: white;
 }
 footer {visibility: hidden}
+hr { margin: 0.2em auto; }
+"""
+
+js_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+css_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+header = f"""
+<link rel="stylesheet" href="{css_url}">
+<script src="{js_url}" crossorigin="anonymous"></script>
 """
 
 theme = gr.themes.Soft(

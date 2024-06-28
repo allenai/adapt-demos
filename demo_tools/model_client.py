@@ -29,9 +29,10 @@ def run_dummy_safety_filter(message, history, temperature, safety_filter_checkbo
 
 
 class ModelClientHandler:
-    def __init__(self, model, api_key, port, debug=False, stream=True):
+    def __init__(self, model, api_key, port, model_name=None, debug=False, stream=True):
         self.model_url = f"http://localhost:{port}/v1"
         self.model = model
+        self.model_name = model_name or model
         self.debug = debug
         if debug:
             if stream:
@@ -116,27 +117,46 @@ class SafetyClientHandler(ModelClientHandler):
             stream=False,
         )
 
-        # import ipdb; ipdb.set_trace()
         safety_labels = [
             [s.strip() for s in label.split(":")]
             for label in safety_response.choices[0].message.content.split("\n")
             if label.strip() and len(label.split(":")) > 1
         ]
 
-        safety_unwanted_labels = ["yes"] * len(safety_labels)
+        safety_label_styles = {"default": {"yes": "warning", "no": "success"}}
+
+        def _display_safety_label(key: str, lbl: str) -> str:
+            return (
+                f"<span style='color: black'>{key}</span>&nbsp;"\
+                f"<span class='badge text-bg-{safety_label_styles.get(key, safety_label_styles['default'])[lbl.lower()]}'>"  # noqa
+                f"{lbl.capitalize()}"
+                f"</span>"
+            )
+
+        safety_labels_html = None
         if any(k for k, v in safety_labels if k.lower().startswith("response refusal")):
+            refusal_index = None
             for i, (k, v) in enumerate(safety_labels):
                 if k.lower().startswith("response refusal"):
-                    safety_unwanted_labels[i] = "no"
+                    safety_label_styles[k] = {"yes": "info", "no": "secondary"}
+                    refusal_index = i
+            if refusal_index is not None:
+                refusal_key, refusal_label = safety_labels.pop(refusal_index)
+                safety_labels_html = "\n<br/>\n".join(
+                    [
+                        _display_safety_label(key, label)
+                        for i, (key, label) in enumerate(safety_labels)
+                    ]
+                ) + "\n<hr/>\n" + _display_safety_label(refusal_key, refusal_label)
+                safety_labels.append((refusal_key, refusal_label))
 
-        safety_labels_html = "\n<br/>\n".join(
-            [
-                f"{key} <span class='badge text-bg-{'warning' if label.lower() == safety_unwanted_labels[i] else 'success'}'>"  # noqa
-                f"{label.capitalize()}"
-                f"</span>"
-                for i, (key, label) in enumerate(safety_labels)
-            ]
-        )
+        if not safety_labels_html:
+            safety_labels_html = "\n<br/>\n".join(
+                [
+                    _display_safety_label(key, label)
+                    for i, (key, label) in enumerate(safety_labels)
+                ]
+            )
         safety_labels_html = f"<div class='classifier-text'>{safety_labels_html}</div>"
 
         safety_labels = OrderedDict(safety_labels)
@@ -150,20 +170,21 @@ class SafetyClientHandler(ModelClientHandler):
         ):
             refusal_rewrite_text = refusal_rewrite_text or MAKE_SAFE_PROMPT
 
-            reprompt_kwargs = {}
+            refusal_rewrite_kwargs = {}
             if "{prompt}" in refusal_rewrite_text:
-                reprompt_kwargs["prompt"] = last_query
+                refusal_rewrite_kwargs["prompt"] = last_query
             if "{response}" in refusal_rewrite_text:
-                reprompt_kwargs["response"] = last_response
+                refusal_rewrite_kwargs["response"] = last_response
 
-            if not reprompt_kwargs:
+            if not refusal_rewrite_kwargs:
                 logger.warning(
                     "Make safe prompt template does not include user input ({prompt}) or assistant response ({response})"  # noqa
                 )
-            make_response_safe_input = refusal_rewrite_text.format(**reprompt_kwargs)
-            logger.debug(" --- MAKE SAFE PROMPT ---")
-            logger.debug(make_response_safe_input)
-            logger.debug(" ---")
+            make_response_safe_input = refusal_rewrite_text.format(**refusal_rewrite_kwargs)
+            if self.debug:
+                logger.info(" --- MAKE SAFE PROMPT ---")
+                logger.info(make_response_safe_input)
+                logger.info(" ---")
             make_response_safe_openai_format = history_openai_format + [
                 {"role": "user", "content": make_response_safe_input}
             ]
@@ -174,20 +195,21 @@ class SafetyClientHandler(ModelClientHandler):
                 temperature=temperature,
             )
 
-            safe_response = HTML(
-                f"""<div class="card text-bg-success white-background" style='background-color: white; padding: 10px;>
+            if not response.choices[0].message.content.strip():
+                logger.warning("Refusal rewrite response is empty")
+
+            safe_response = f"""<div class="card white-background" style='background-color: white; padding: 10px;>
                         <h4 class="card-title safe-title">Safe Response</h4>
                         <div class="card-body safe-text">{response.choices[0].message.content}
                         </div>
                 </div>"""
-            )
         else:
-            safe_response = "Assistant's response is safe"
+            safe_response = "<p style='color: black'>Assistant's response is safe</p>"
             if self.debug:
                 safe_response = "NOTE: FILTER OFF IN DEBUG MODE.\n"
 
         # modify the responses with html for white background
-        safety_labels_html = f"<div style='background-color: white; padding: 10px;>{safety_labels_html}</div>"
+        safety_labels_html = f"<div style='background-color: white; color: black; padding: 10px;'>{safety_labels_html}</div>"
         safe_response = f"<div style='background-color: white; padding: 10px;>{safe_response}</div>"
 
         return HTML(safety_labels_html), HTML(safe_response)
