@@ -234,19 +234,20 @@ class EnhancedChatInterface(Blocks):
                         )
 
                 # Safety content
-                with Row():
-                    with Column():
-                        self.safety_log = Markdown("Safety content to appear here")
+                if self.safety_fn is not None and self.safety_fn_2 is not None:
+                    with Row():
+                        with Column():
+                            self.safety_log = Markdown("Safety content to appear here")
 
-                        self.safe_response = Markdown(
-                            "If assistant response is detected as harmful, a safe version would appear here"
-                        )
-                    with Column():
-                        self.safety_log_2 = Markdown("Safety content to appear here")
+                            self.safe_response = Markdown(
+                                "If assistant response is detected as harmful, a safe version would appear here"
+                            )
+                        with Column():
+                            self.safety_log_2 = Markdown("Safety content to appear here")
 
-                        self.safe_response_2 = Markdown(
-                            "If assistant response is detected as harmful, a safe version would appear here"
-                        )
+                            self.safe_response_2 = Markdown(
+                                "If assistant response is detected as harmful, a safe version would appear here"
+                            )
             ##############################
             else:
                 with Row():
@@ -260,14 +261,14 @@ class EnhancedChatInterface(Blocks):
                                 height="40%" if fill_height else None,
                                 show_share_button=True,
                             )
-
-                    with Column(scale=1):
-                        self.safety_log = Markdown(
-                            "<div style='background-color: white; padding: 10px;'>Safety content to appear here</div>"
-                        )
-                        self.safe_response = Markdown(
-                            "<div style='background-color: white; padding: 10px;'>If assistant response is detected as harmful, a safe version would appear here</div>"
-                        )
+                    if self.safety_fn is not None:
+                        with Column(scale=1):
+                            self.safety_log = Markdown(
+                                "<div style='background-color: white; padding: 10px;'>Safety content to appear here</div>"
+                            )
+                            self.safe_response = Markdown(
+                                "<div style='background-color: white; padding: 10px;'>If assistant response is detected as harmful, a safe version would appear here</div>"
+                            )
 
             with Row():
                 for btn in [retry_btn, undo_btn, clear_btn]:
