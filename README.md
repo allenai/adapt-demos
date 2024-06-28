@@ -33,6 +33,9 @@ TLDR: Here’s a document that can help you easily get set up to talk with a tra
 
 ## Repository Structure
 
+This repository is largely an expansion of [Gradio's ChatInterface](https://www.gradio.app/docs/gradio/chatinterface) abstraction.
+We also add OpenAI endpoint compatible tools for debugging chat demos.
+
 ```
 ├── README.md                   <- Top-level guidance to use this project
 ├── demo_tools/                
