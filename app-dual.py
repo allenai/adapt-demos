@@ -97,6 +97,7 @@ demo = EnhancedChatInterface(
     model_client_2=model_client_2,
     additional_inputs=additional_inputs,
     title="AI2 Internal Model Demo",
+    fill_height=True,
     head=header,
     css=css_style,
     theme=theme,

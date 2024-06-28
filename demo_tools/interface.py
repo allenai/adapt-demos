@@ -202,17 +202,15 @@ class EnhancedChatInterface(Blocks):
 
         with self:
             with Row():
-                if title:
-                    title_str = f"""<div style="display: flex; align-items: center;">
-                                    <img src="/file=demo_tools/assets/ai2-logo.png" style="width: 25px; height: 25px; margin-top: 10px; margin-bottom: -7px; margin-right: 5px;">
-                                    <h1 style="margin-bottom: 1rem; color:white">{self.title}</h1>
-                                </div>"""
-                    # Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
-                    Markdown(title_str)  # removed text-align: center;
-
-            if description:
-                with Row():
-                    with Column(3):
+                with Column(scale=3):
+                    if title:
+                        title_str = f"""<div style="display: flex; align-items: center;">
+                                        <img src="/file=demo_tools/assets/ai2-logo.png" style="width: 25px; height: 25px; margin-top: 10px; margin-bottom: -7px; margin-right: 5px;">
+                                        <h1 style="margin-bottom: 1rem">{self.title}</h1>
+                                    </div>"""
+                        # Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
+                        Markdown(title_str)  # removed text-align: center;
+                    if description:
                         Markdown(description)
 
             ##############################
@@ -258,7 +256,7 @@ class EnhancedChatInterface(Blocks):
                             self.chatbot = Chatbot(
                                 label=f"Model: {self.model_client.model}",
                                 scale=1,
-                                height="40%" if fill_height else None,
+                                height=700 if fill_height else None,
                                 show_share_button=True,
                             )
                     if self.safety_fn is not None:
