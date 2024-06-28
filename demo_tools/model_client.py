@@ -127,7 +127,7 @@ class SafetyClientHandler(ModelClientHandler):
 
         def _display_safety_label(key: str, lbl: str) -> str:
             return (
-                f"<span style='color: black'>{key}</span>&nbsp;"\
+                f"<span style='color: black'>{key}</span>&nbsp;"
                 f"<span class='badge text-bg-{safety_label_styles.get(key, safety_label_styles['default'])[lbl.lower()]}'>"  # noqa
                 f"{lbl.capitalize()}"
                 f"</span>"
@@ -142,20 +142,18 @@ class SafetyClientHandler(ModelClientHandler):
                     refusal_index = i
             if refusal_index is not None:
                 refusal_key, refusal_label = safety_labels.pop(refusal_index)
-                safety_labels_html = "\n<br/>\n".join(
-                    [
-                        _display_safety_label(key, label)
-                        for i, (key, label) in enumerate(safety_labels)
-                    ]
-                ) + "\n<hr/>\n" + _display_safety_label(refusal_key, refusal_label)
+                safety_labels_html = (
+                    "\n<br/>\n".join(
+                        [_display_safety_label(key, label) for i, (key, label) in enumerate(safety_labels)]
+                    )
+                    + "\n<hr/>\n"
+                    + _display_safety_label(refusal_key, refusal_label)
+                )
                 safety_labels.append((refusal_key, refusal_label))
 
         if not safety_labels_html:
             safety_labels_html = "\n<br/>\n".join(
-                [
-                    _display_safety_label(key, label)
-                    for i, (key, label) in enumerate(safety_labels)
-                ]
+                [_display_safety_label(key, label) for i, (key, label) in enumerate(safety_labels)]
             )
         safety_labels_html = f"<div class='classifier-text'>{safety_labels_html}</div>"
 
@@ -209,7 +207,9 @@ class SafetyClientHandler(ModelClientHandler):
                 safe_response = "NOTE: FILTER OFF IN DEBUG MODE.\n"
 
         # modify the responses with html for white background
-        safety_labels_html = f"<div style='background-color: white; color: black; padding: 10px;'>{safety_labels_html}</div>"
+        safety_labels_html = (
+            f"<div style='background-color: white; color: black; padding: 10px;'>{safety_labels_html}</div>"
+        )
         safe_response = f"<div style='background-color: white; padding: 10px;>{safe_response}</div>"
 
         return HTML(safety_labels_html), HTML(safe_response)

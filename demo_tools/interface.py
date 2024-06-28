@@ -443,7 +443,7 @@ class EnhancedChatInterface(Blocks):
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                     show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                 )
-                .then( # SAFETY NOT ENABLE IN SIDEBYSIDE
+                .then(  # SAFETY NOT ENABLE IN SIDEBYSIDE
                     self.safety_fn,
                     [self.saved_input, self.chatbot_state] + addition_inputs_1,
                     [self.safety_log, self.safe_response],
@@ -458,7 +458,12 @@ class EnhancedChatInterface(Blocks):
                 .then(
                     self._save_dual_conversation,
                     inputs=[
-                        self.chatbot_state, self.chatbot_state_2, self.safety_log, self.safe_response, self.safety_log_2, self.safe_response_2
+                        self.chatbot_state,
+                        self.chatbot_state_2,
+                        self.safety_log,
+                        self.safe_response,
+                        self.safety_log_2,
+                        self.safe_response_2,
                     ],
                     outputs=[],
                     show_api=False,
@@ -856,11 +861,7 @@ class EnhancedChatInterface(Blocks):
         self,
         message: str | dict[str, list],
         history: list[list[str | tuple | None]],
-    ) -> tuple[
-        list[list[str | tuple | None]],
-        str | dict[str, list],
-        list[list[str | tuple | None]],
-    ]:
+    ) -> tuple[list[list[str | tuple | None]], str | dict[str, list], list[list[str | tuple | None]],]:
         if self.multimodal and isinstance(message, dict):
             remove_input = len(message["files"]) + 1 if message["text"] is not None else len(message["files"])
             history = history[:-remove_input]
@@ -903,7 +904,7 @@ class EnhancedChatInterface(Blocks):
         return "Conversation saved successfully!"
 
     def _save_dual_conversation(
-            self, chat_history, chat_history_2, safety_log, safe_response, safety_log_2, safe_response_2
+        self, chat_history, chat_history_2, safety_log, safe_response, safety_log_2, safe_response_2
     ):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         debug_mode = self.model_client.debug
@@ -982,10 +983,9 @@ def _extract_safety_labels(safety_log: str) -> str | dict[str, str]:
             safety_labels = {}
             for kv_html in re.split("\n<[bh]r/>\n", m.group(1), re.MULTILINE):
                 key_html, label_html = kv_html.split("&nbsp;")
-                key = key_html[key_html.index(">") + 1:key_html.index("</span")].strip()
-                value = label_html[label_html.index(">") + 1:label_html.index("</span")].strip()
+                key = key_html[key_html.index(">") + 1 : key_html.index("</span")].strip()
+                value = label_html[label_html.index(">") + 1 : label_html.index("</span")].strip()
                 safety_labels[key] = value
             return safety_labels
 
     return safety_log
-
