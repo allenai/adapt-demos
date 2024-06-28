@@ -62,6 +62,14 @@ Requirements are in [`pyproject.toml`](https://github.com/allenai/adapt-demos/bl
 
 _To add or request new features, please [open an issue](https://github.com/allenai/adapt-demos/issues/new/choose)._
 
+### Debug mode
+We have added a debug mode for working on the interface without using GPUs. 
+With `app.py` or `app-dual.py` pass the arg `--debug` as follows:
+```
+python app.py --debug --port 1234 --model tmp --safety_filter_port 1234 --safety_model luca
+python app-dual.py --model_one tmp --model_two TMEPPP --port_one 1234 --port_two 2333 --debug
+```
+
 
 ## Workflow
 
@@ -71,22 +79,28 @@ Much of this workflow is specific to AI2 tools, but largely the system can be ex
 
 **Creating a session**
 
-    beaker session create --image beaker://nathanl/rb_v16 --gpus 1 --budget ai2/oe-adapt --port 8000
-    beaker session create --image beaker://nathanl/vllm_image --gpus 2 --budget ai2/oe-adapt --port 8000 # for newer olmo models
+With the right image and number of gpus.
+```
+beaker session create --image beaker://nathanl/rb_v16 --gpus 1 --budget ai2/oe-adapt --port 8000
+```
 
 Port mapping outputs (key part on last line, you need this later):
 
-    Defaulting to workspace ai2/nathanl
-    Starting session 01HW8DZJFR6QEAFAABCTCR2BY2 with at least 2 GPUs on node 01HQX3BZZ194B0VYF2HAAAM9Z9... (Press Ctrl+C to cancel)
-    See more information at https://beaker.org/job/01HW8DZJFR6QEAFAABCTCR2BY2
-    Waiting for session to start............. Done!
-    Reserved 2 GPUs, 31 CPUs
-    Exposed Ports: 0.0.0.0:32800->8000/tcp
+```
+Defaulting to workspace ai2/nathanl
+Starting session 01HW8DZJFR6QEAFAABCTCR2BY2 with at least 2 GPUs on node 01HQX3BZZ194B0VYF2HAAAM9Z9... (Press Ctrl+C to cancel)
+See more information at https://beaker.org/job/01HW8DZJFR6QEAFAABCTCR2BY2
+Waiting for session to start............. Done!
+Reserved 2 GPUs, 31 CPUs
+Exposed Ports: 0.0.0.0:32800->8000/tcp
+```
+Port 32800 will be passed to the Gradio demo.
 
-**For Safety Models**  you need to create another beaker session, run either of these commands in the same machine depending on the size of your model:
+**For Another Model (e.g. safety / side-by-side)**:  You need to create another beaker session, run either of these commands in the same machine depending on the size of your model (note the port needs to be different if on the same machine, but cross machine tunneling of ports via SSH can also be used):
 
-    beaker session create --image beaker://nathanl/rb_v16 --gpus 1 --budget ai2/oe-adapt --port 8001
-    beaker session create --image beaker://nathanl/vllm_image --gpus 2 --budget ai2/oe-adapt --port 8001 # for newer olmo models
+```
+beaker session create --image beaker://nathanl/rb_v16 --gpus 1 --budget ai2/oe-adapt --port 8001
+```
 
 Make sure to take note of the port mapping output similar to above.
 
@@ -182,7 +196,20 @@ Using multiple models will mean you need to pass --port to vllm (the default vll
     RUN chmod -R 777 /stage/
 
 
-## Extra Instructions (that didn’t work)
+## Extra Notes
+
+### Debugging
+
+**Unexpected generator object**: Gradio's `ChatInterface` [inspected the generation function](https://github.com/allenai/adapt-demos/blob/c3e3e97b0c6e4a9e15cf46982276f95343bec9a7/demo_tools/interface.py#L159) to see if it is designed for streaming or not.
+Some of our code is parametrized to either stream or return the whole thing, which will make the object from the predict function appear as a generator sometimes.
+This is nasty to debug, good luck.
+
+**HuggingFace Token in session for VLLM**: If you sign in with `huggingface-cli login` in one session on a node, you should be able to just do this once. Alternatively, you can do the following.
+```
+mkdir -p "/root/.cache/huggingface" && echo -n "${HUGGING_FACE_HUB_TOKEN}" > "/root/.cache/huggingface/token"
+```
+
+### Useful Commands / Ideas
 
 **Set Up Port Forwarding**
 
@@ -204,7 +231,7 @@ ssh -L 32800:localhost:32800 allennlp-cirrascale-01.reviz.ai2.in
 
 **Fixing Sharing (not currently working on local machines)**
 
-Gradio will error the first time you try and share. **Note: sharing links take**
+Gradio will error the first time you try and share. 
 
 ```
 
