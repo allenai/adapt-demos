@@ -26,6 +26,7 @@ import functools
 import inspect
 import json  # Added imports
 import os  # Added imports
+import re
 from typing import AsyncGenerator, Callable, Literal, Union, cast
 
 import anyio
@@ -79,6 +80,7 @@ class EnhancedChatInterface(Blocks):
         model_client: ModelClientHandler,
         *,
         fn_2: Callable | None = None,
+        safety_fn_2: Callable | None = None,
         model_client_2: ModelClientHandler | None = None,
         multimodal: bool = False,
         chatbot: Chatbot | None = None,
@@ -152,6 +154,7 @@ class EnhancedChatInterface(Blocks):
         self.concurrency_limit = concurrency_limit
         self.fn = fn
         self.safety_fn = safety_fn
+        self.safety_fn_2 = safety_fn_2
         self.is_async = inspect.iscoroutinefunction(self.fn) or inspect.isasyncgenfunction(self.fn)
         self.is_generator = inspect.isgeneratorfunction(self.fn) or inspect.isasyncgenfunction(self.fn)
         self.buttons: list[Button | None] = []
@@ -209,40 +212,40 @@ class EnhancedChatInterface(Blocks):
                         Markdown(title_str)  # removed text-align: center;
                     if description:
                         Markdown(description)
-                # with Column(scale=2):
-                #     self.safety_log = Markdown("Safety content to appear here")
 
             ##############################
             if self.side_by_side:
                 with Row():
                     with Column():
                         self.chatbot = Chatbot(
-                            label=f"Model: {self.model_client.model}",
+                            label=f"Model: {self.model_client.model_name}",
                             scale=1,
                             height=700 if fill_height else None,
                             show_share_button=True,
                         )
                     with Column():
                         self.chatbot_2 = Chatbot(
-                            label=f"Model: {self.model_client_2.model}",
+                            label=f"Model: {self.model_client_2.model_name}",
                             scale=1,
                             height=700 if fill_height else None,
                             show_share_button=True,
                         )
-                # Safety content current disabled for side-by-side, finale design TBD
-                # with Row():
-                #     with Column():
-                #         self.safety_log = Markdown("Safety content to appear here")
 
-                #         self.safe_response = Markdown(
-                #             "If assistant response is detected as harmful, a safe version would appear here"
-                #         )
-                #     with Column():
-                #         self.safety_log_2 = Markdown("Safety content to appear here")
+                # Safety content
+                if self.safety_fn is not None and self.safety_fn_2 is not None:
+                    with Row():
+                        with Column():
+                            self.safety_log = Markdown("Safety content to appear here")
 
-                #         self.safe_response_2 = Markdown(
-                #             "If assistant response is detected as harmful, a safe version would appear here"
-                #         )
+                            self.safe_response = Markdown(
+                                "If assistant response is detected as harmful, a safe version would appear here"
+                            )
+                        with Column():
+                            self.safety_log_2 = Markdown("Safety content to appear here")
+
+                            self.safe_response_2 = Markdown(
+                                "If assistant response is detected as harmful, a safe version would appear here"
+                            )
             ##############################
             else:
                 with Row():
@@ -256,14 +259,14 @@ class EnhancedChatInterface(Blocks):
                                 height=700 if fill_height else None,
                                 show_share_button=True,
                             )
-
-                    with Column(scale=1):
-                        self.safety_log = Markdown(
-                            "<div style='background-color: white; padding: 10px;'>Safety content to appear here</div>"
-                        )
-                        self.safe_response = Markdown(
-                            "<div style='background-color: white; padding: 10px;'>If assistant response is detected as harmful, a safe version would appear here</div>"
-                        )
+                    if self.safety_fn is not None:
+                        with Column(scale=1):
+                            self.safety_log = Markdown(
+                                "<div style='background-color: white; padding: 10px;'>Safety content to appear here</div>"
+                            )
+                            self.safe_response = Markdown(
+                                "<div style='background-color: white; padding: 10px;'>If assistant response is detected as harmful, a safe version would appear here</div>"
+                            )
 
             with Row():
                 for btn in [retry_btn, undo_btn, clear_btn]:
@@ -438,21 +441,28 @@ class EnhancedChatInterface(Blocks):
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                     show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                 )
-                # .then( # SAFETY NOT ENABLE IN SIDEBYSIDE
-                #     self.safety_fn,
-                #     [self.saved_input, self.chatbot_state] + self.additional_inputs,
-                #     [self.safety_log, self.safe_response],
-                #     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
-                # )
-                # .then(
-                #     self.safety_fn,
-                #     [self.saved_input, self.chatbot_state_2] + self.additional_inputs,
-                #     [self.safety_log_2, self.safe_response_2],
-                #     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
-                # )
+                .then(  # SAFETY NOT ENABLE IN SIDEBYSIDE
+                    self.safety_fn,
+                    [self.saved_input, self.chatbot_state] + addition_inputs_1,
+                    [self.safety_log, self.safe_response],
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                )
+                .then(
+                    self.safety_fn_2,
+                    [self.saved_input, self.chatbot_state_2] + addition_inputs_2,
+                    [self.safety_log_2, self.safe_response_2],
+                    concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
+                )
                 .then(
                     self._save_dual_conversation,
-                    inputs=[self.chatbot_state, self.chatbot_state_2],
+                    inputs=[
+                        self.chatbot_state,
+                        self.chatbot_state_2,
+                        self.safety_log,
+                        self.safe_response,
+                        self.safety_log_2,
+                        self.safe_response_2,
+                    ],
                     outputs=[],
                     show_api=False,
                 )
@@ -491,7 +501,7 @@ class EnhancedChatInterface(Blocks):
                 )  # SAVING DATA BELOW
                 .then(
                     self._save_single_conversation,
-                    inputs=[self.chatbot_state],
+                    inputs=[self.chatbot_state, self.safety_log, self.safe_response],
                     outputs=[],
                     show_api=False,
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
@@ -849,11 +859,7 @@ class EnhancedChatInterface(Blocks):
         self,
         message: str | dict[str, list],
         history: list[list[str | tuple | None]],
-    ) -> tuple[
-        list[list[str | tuple | None]],
-        str | dict[str, list],
-        list[list[str | tuple | None]],
-    ]:
+    ) -> tuple[list[list[str | tuple | None]], str | dict[str, list], list[list[str | tuple | None]],]:
         if self.multimodal and isinstance(message, dict):
             remove_input = len(message["files"]) + 1 if message["text"] is not None else len(message["files"])
             history = history[:-remove_input]
@@ -862,7 +868,7 @@ class EnhancedChatInterface(Blocks):
         return history, message or "", history
 
     # below added by nathanl@
-    def _save_single_conversation(self, chat_history):
+    def _save_single_conversation(self, chat_history, safety_log, safe_response):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         debug_mode = self.model_client.debug
 
@@ -883,12 +889,21 @@ class EnhancedChatInterface(Blocks):
             "metadata": {},  # TODO add safety metadata
         }
 
+        # log safety outputs
+        if safety_log:
+            data_to_save["safety_log"] = _extract_safety_labels(safety_log)
+
+        if safe_response:
+            data_to_save["safe_response"] = _cleanup_safe_response(safe_response)
+
         with open(file_path, "w") as f:
             json.dump(data_to_save, f, indent=4)
 
         return "Conversation saved successfully!"
 
-    def _save_dual_conversation(self, chat_history, chat_history_2):
+    def _save_dual_conversation(
+        self, chat_history, chat_history_2, safety_log, safe_response, safety_log_2, safe_response_2
+    ):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         debug_mode = self.model_client.debug
 
@@ -907,7 +922,68 @@ class EnhancedChatInterface(Blocks):
             "metadata": {},  # TODO add safety metadata
         }
 
+        # log safety outputs
+        if safety_log:
+            data_to_save["safety_log"] = _extract_safety_labels(safety_log)
+
+        if safe_response:
+            data_to_save["safe_response"] = _cleanup_safe_response(safe_response)
+
+        if safety_log_2:
+            data_to_save["safety_log_2"] = _extract_safety_labels(safety_log_2)
+
+        if safe_response_2:
+            data_to_save["safe_response_2"] = _cleanup_safe_response(safe_response_2)
+
         with open(file_path, "w") as f:
             json.dump(data_to_save, f, indent=4)
 
         return "Conversation saved successfully!"
+
+
+def _cleanup_safe_response(safe_response: str) -> str:
+    """
+    extracts safe response text from HTML
+    Args:
+        safe_response: HTML of safe response
+
+    Returns:
+        safe response text
+    """
+    m = re.match(r'.*<div class="card-body safe-text">(.+)(</div>\s*){3,}.*', safe_response, re.MULTILINE | re.DOTALL)
+    if m is not None:
+        safe_response = m.group(1).strip()
+    else:
+        m = re.match(r".*<div style[^>]*><p[^>]*>(.+)</p>\s*</div>.*", safe_response, re.MULTILINE | re.DOTALL)
+        if m is not None:
+            safe_response = m.group(1).strip()
+
+    return safe_response
+
+
+def _extract_safety_labels(safety_log: str) -> str | dict[str, str]:
+    """
+    extracts safety labels text from HTML
+    Args:
+        safety_log: HTML of safety classifier output
+
+    Returns:
+        safety labels as a dict or as a str in case of errors
+    """
+    # errors displayed in <p> in safety logs
+    m = re.match(r".*<div style[^>]*><p[^>]*>(.+)</p>\s*</div>.*", safety_log, re.MULTILINE | re.DOTALL)
+    if m is not None:
+        safety_log = m.group(1).strip()
+    else:
+        # otherwise, logs are shown within <div>
+        m = re.match(r"<div style[^>]*><div[^>]*>(.+)</div>\s*</div>.*", safety_log, re.MULTILINE | re.DOTALL)
+        if m is not None:
+            safety_labels = {}
+            for kv_html in re.split("\n<[bh]r/>\n", m.group(1), re.MULTILINE):
+                key_html, label_html = kv_html.split("&nbsp;")
+                key = key_html[key_html.index(">") + 1 : key_html.index("</span")].strip()
+                value = label_html[label_html.index(">") + 1 : label_html.index("</span")].strip()
+                safety_labels[key] = value
+            return safety_labels
+
+    return safety_log

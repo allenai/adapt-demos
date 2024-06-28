@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gradio as gr
 from typing import Iterable, Union
+
+import gradio as gr
 from gradio.themes.base import Base
 from gradio.themes.utils import colors, fonts, sizes
-
 
 css_style = """
 .classifier-text {
@@ -24,15 +24,23 @@ css_style = """
 }
 .safe-text {
     font-size: 16px !important;
-    color: white;
+    color: green;
 }
 .safe-title {
-    color: white;
+    color: green;
 }
 .white-background {
     background-color: white;
 }
 footer {visibility: hidden}
+hr { margin: 0.2em auto; }
+"""
+
+js_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+css_url = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+header = f"""
+<link rel="stylesheet" href="{css_url}">
+<script src="{js_url}" crossorigin="anonymous"></script>
 """
 
 theme = gr.themes.Soft(
@@ -104,7 +112,7 @@ ai2_dark_green = colors.Color(
     c200="#9dadae",
     c300="#6c8486",
     c400="#3b5b5d",
-    c500="#0a3235",   # default
+    c500="#0a3235",  # default
     c600="#092d30",
     c700="#072325",
     c800="#05191b",
@@ -119,7 +127,7 @@ ai2_light_green = colors.Color(
     c200="#9fead1",
     c300="#6fe0ba",
     c400="#3fd5a3",
-    c500="#0fcb8c",     # default
+    c500="#0fcb8c",  # default
     c600="#0eb77e",
     c700="#0b8e62",
     c800="#086646",
@@ -135,7 +143,7 @@ ai2_purple = colors.Color(
     c200="#e0a4f6",
     c300="#d076f1",
     c400="#c149ed",
-    c500="#b11be8",    # default
+    c500="#b11be8",  # default
     c600="#9f18d1",
     c700="#7c13a2",
     c800="#590e74",
@@ -145,7 +153,6 @@ ai2_purple = colors.Color(
 
 
 class Ai2Theme(Base):
-
     def __init__(
         self,
         *,
