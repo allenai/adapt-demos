@@ -148,6 +148,7 @@ class SafetyClientHandler(ModelClientHandler):
                         for i, (key, label) in enumerate(safety_labels)
                     ]
                 ) + "\n<hr/>\n" + _display_safety_label(refusal_key, refusal_label)
+                safety_labels.append((refusal_key, refusal_label))
 
         if not safety_labels_html:
             safety_labels_html = "\n<br/>\n".join(
