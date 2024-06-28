@@ -31,6 +31,24 @@ The basic system diagram is shown below.
 
 TLDR: Here’s a document that can help you easily get set up to talk with a trained model via Gradio UI (locally).
 
+## Repository Structure
+
+```
+├── README.md                   <- Top-level guidance to use this project
+├── demo_tools/                
+│   ├── templates/              <- Jinja chat templates for vllm
+│   ├── dummy_chatbot.py        <- OpenAI compatible debugging model
+│   ├── interface.py            <- Enhanced Gradio Code
+│   ├── model_client.py         <- Predict functions & model wrappers for Gradio
+│   ├── prompts.py              <- Prompts 
+│   └── style.py                <- Styling code
+├── LICENSE                     
+├── Makefile                    <- Style tools
+├── app-dual.py                 <- Side-by-side demo
+├── app.py                      <- Base demo
+└── pyproject.toml              <- Requirements and setup
+```
+
 ## References & Setup
 
 * [VLLM endpoint docs](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) 
