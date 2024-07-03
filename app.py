@@ -18,13 +18,13 @@ import logging
 import gradio as gr
 
 from demo_tools import (
+    Ai2Theme,
     EnhancedChatInterface,
     ModelClientHandler,
     SafetyClientHandler,
     css_style,
     header,
     run_dummy_safety_filter,
-    theme,
 )
 from demo_tools.prompts import MAKE_SAFE_PROMPT
 
@@ -89,7 +89,7 @@ demo = EnhancedChatInterface(
     fill_height=True,  # not implemented correctly with safety metadata
     css=css_style,
     head=header,
-    theme=theme,
+    theme=Ai2Theme(),
     concurrency_limit=4,
 )
 

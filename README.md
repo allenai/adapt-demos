@@ -155,6 +155,7 @@ NOTE: If your model doesn’t have the chat template in the tokenizer config, se
 
     python -m vllm.entrypoints.openai.api_server --model allenai/wildguard --tensor-parallel-size 2 --port 8001
 
+This one does not need a chat template as it is handled elsewhere in the code (for now).
 
 ### Set up Gradio UI ON A BEAKER MACHINE
 

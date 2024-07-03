@@ -859,7 +859,11 @@ class EnhancedChatInterface(Blocks):
         self,
         message: str | dict[str, list],
         history: list[list[str | tuple | None]],
-    ) -> tuple[list[list[str | tuple | None]], str | dict[str, list], list[list[str | tuple | None]],]:
+    ) -> tuple[
+        list[list[str | tuple | None]],
+        str | dict[str, list],
+        list[list[str | tuple | None]],
+    ]:
         if self.multimodal and isinstance(message, dict):
             remove_input = len(message["files"]) + 1 if message["text"] is not None else len(message["files"])
             history = history[:-remove_input]
