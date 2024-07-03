@@ -20,7 +20,7 @@ import gradio as gr
 from demo_tools import (
     css_style,
     header,
-    theme,
+    Ai2Theme,
     ModelClientHandler,
     SafetyClientHandler,
     EnhancedChatInterface,
@@ -100,7 +100,7 @@ demo = EnhancedChatInterface(
     fill_height=True,
     head=header,
     css=css_style,
-    theme=theme,
+    theme=Ai2Theme(),
     concurrency_limit=4,
 )
 

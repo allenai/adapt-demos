@@ -14,7 +14,6 @@
 
 from typing import Iterable, Union
 
-import gradio as gr
 from gradio.themes.base import Base
 from gradio.themes.utils import colors, fonts, sizes
 
@@ -43,36 +42,37 @@ header = f"""
 <script src="{js_url}" crossorigin="anonymous"></script>
 """
 
-theme = gr.themes.Soft(
-    primary_hue=gr.themes.colors.pink,
-    secondary_hue=gr.themes.colors.emerald,
-    font=[gr.themes.GoogleFont("Source Sans Pro")],
-    font_mono=[gr.themes.GoogleFont("IBM Plex Mono")],
-).set(
-    # core
-    body_background_fill="#0A3235",
-    # misc
-    loader_color="#0FCB8C",
-    slider_color="#0FCB8C",
-    block_border_color="#e1d9d1",  # darkened faf2e9
-    block_border_width="2.5px",
-    # block_shadow="*shadow_drop_lg",
-    # input
-    border_color_primary="#F0529C",
-    # textbox_border_width="2px",
-    # textbox_shadow="none",
-    # buttons
-    button_shadow="none",
-    button_border_width="0px",
-    button_primary_background_fill_hover="#B11BE8",
-    button_primary_background_fill="#F0529C",
-    button_primary_border_color="#F0529C",
-    button_primary_border_color_dark="#B11BE8",
-    # button_secondary_background_fill_hover="#0FCB8C", # "#e1d9d1",
-    # button_secondary_background_fill="#0CA270", # "#FAF2E9",
-    # button_secondary_border_color="#0FCB8C", #"#FAF2E9",
-    # button_secondary_border_color_dark="#0FCB8C", #"#FAF2E9",
-)
+# old, original version
+# theme = gr.themes.Soft(
+#     primary_hue=gr.themes.colors.pink,
+#     secondary_hue=gr.themes.colors.emerald,
+#     font=[gr.themes.GoogleFont("Source Sans Pro")],
+#     font_mono=[gr.themes.GoogleFont("IBM Plex Mono")],
+# ).set(
+#     # core
+#     body_background_fill="#0A3235",
+#     # misc
+#     loader_color="#0FCB8C",
+#     slider_color="#0FCB8C",
+#     block_border_color="#e1d9d1",  # darkened faf2e9
+#     block_border_width="2.5px",
+#     # block_shadow="*shadow_drop_lg",
+#     # input
+#     border_color_primary="#F0529C",
+#     # textbox_border_width="2px",
+#     # textbox_shadow="none",
+#     # buttons
+#     button_shadow="none",
+#     button_border_width="0px",
+#     button_primary_background_fill_hover="#B11BE8",
+#     button_primary_background_fill="#F0529C",
+#     button_primary_border_color="#F0529C",
+#     button_primary_border_color_dark="#B11BE8",
+#     # button_secondary_background_fill_hover="#0FCB8C", # "#e1d9d1",
+#     # button_secondary_background_fill="#0CA270", # "#FAF2E9",
+#     # button_secondary_border_color="#0FCB8C", #"#FAF2E9",
+#     # button_secondary_border_color_dark="#0FCB8C", #"#FAF2E9",
+# )
 
 ai2_off_white = colors.Color(
     name="ai2-off-white",
