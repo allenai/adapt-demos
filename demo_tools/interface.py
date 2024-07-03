@@ -202,17 +202,15 @@ class EnhancedChatInterface(Blocks):
 
         with self:
             with Row():
-                if title:
-                    title_str = f"""<div style="display: flex; align-items: center;">
-                                    <img src="/file=demo_tools/assets/ai2-logo.png" style="width: 25px; height: 25px; margin-top: 10px; margin-bottom: -7px; margin-right: 5px;">
-                                    <h1 style="margin-bottom: 1rem; color:white">{self.title}</h1>
-                                </div>"""
-                    # Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
-                    Markdown(title_str)  # removed text-align: center;
-
-            if description:
-                with Row():
-                    with Column(3):
+                with Column(scale=3):
+                    if title:
+                        title_str = f"""<div style="display: flex; align-items: center;">
+                                        <img src="/file=demo_tools/assets/ai2-logo.png" style="width: 25px; height: 25px; margin-top: 10px; margin-bottom: -7px; margin-right: 5px;">
+                                        <h1 style="margin-bottom: 1rem">{self.title}</h1>
+                                    </div>"""
+                        # Markdown(f"<h1 style='margin-bottom: 1rem'>{self.title}</h1>")  # removed text-align: center;
+                        Markdown(title_str)  # removed text-align: center;
+                    if description:
                         Markdown(description)
 
             ##############################
@@ -258,7 +256,7 @@ class EnhancedChatInterface(Blocks):
                             self.chatbot = Chatbot(
                                 label=f"Model: {self.model_client.model}",
                                 scale=1,
-                                height="40%" if fill_height else None,
+                                height=700 if fill_height else None,
                                 show_share_button=True,
                             )
                     if self.safety_fn is not None:
@@ -443,7 +441,7 @@ class EnhancedChatInterface(Blocks):
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
                     show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                 )
-                .then( # SAFETY NOT ENABLE IN SIDEBYSIDE
+                .then(  # SAFETY NOT ENABLE IN SIDEBYSIDE
                     self.safety_fn,
                     [self.saved_input, self.chatbot_state] + addition_inputs_1,
                     [self.safety_log, self.safe_response],
@@ -458,7 +456,12 @@ class EnhancedChatInterface(Blocks):
                 .then(
                     self._save_dual_conversation,
                     inputs=[
-                        self.chatbot_state, self.chatbot_state_2, self.safety_log, self.safe_response, self.safety_log_2, self.safe_response_2
+                        self.chatbot_state,
+                        self.chatbot_state_2,
+                        self.safety_log,
+                        self.safe_response,
+                        self.safety_log_2,
+                        self.safe_response_2,
                     ],
                     outputs=[],
                     show_api=False,
@@ -903,7 +906,7 @@ class EnhancedChatInterface(Blocks):
         return "Conversation saved successfully!"
 
     def _save_dual_conversation(
-            self, chat_history, chat_history_2, safety_log, safe_response, safety_log_2, safe_response_2
+        self, chat_history, chat_history_2, safety_log, safe_response, safety_log_2, safe_response_2
     ):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         debug_mode = self.model_client.debug
@@ -982,10 +985,9 @@ def _extract_safety_labels(safety_log: str) -> str | dict[str, str]:
             safety_labels = {}
             for kv_html in re.split("\n<[bh]r/>\n", m.group(1), re.MULTILINE):
                 key_html, label_html = kv_html.split("&nbsp;")
-                key = key_html[key_html.index(">") + 1:key_html.index("</span")].strip()
-                value = label_html[label_html.index(">") + 1:label_html.index("</span")].strip()
+                key = key_html[key_html.index(">") + 1 : key_html.index("</span")].strip()
+                value = label_html[label_html.index(">") + 1 : label_html.index("</span")].strip()
                 safety_labels[key] = value
             return safety_labels
 
     return safety_log
-
