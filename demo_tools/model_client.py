@@ -15,7 +15,7 @@
 import logging
 from collections import OrderedDict
 
-from gradio.components import HTML
+from gradio.components import HTML, Markdown
 from openai import OpenAI
 
 from .dummy_chatbot import MockOpenAI, MockOpenAIStream
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def run_dummy_safety_filter(message, history, temperature, safety_filter_checkbox):
-    return "Safety filter not enabled"
+    return Markdown("Safety filter not enabled"), HTML("N/A")
 
 
 class ModelClientHandler:
