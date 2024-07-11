@@ -421,7 +421,7 @@ class EnhancedChatInterface(Blocks):
                 .then(
                     self._display_input,
                     [self.saved_input, self.chatbot_state_2],
-                    [self.chatbot, self.chatbot_state_2],
+                    [self.chatbot_2, self.chatbot_state_2],
                     show_api=False,
                     queue=False,
                 )
