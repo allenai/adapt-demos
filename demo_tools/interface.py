@@ -397,11 +397,12 @@ class EnhancedChatInterface(Blocks):
             self._setup_api()
 
     def _setup_events(self) -> None:
-        submit_fn = partial(self._stream_fn, fn=self.fn) if self.is_generator else partial(self._submit_fn, fn=self.fn)
+        submit_fn = self._stream_fn if self.is_generator else self._submit_fn
+
         submit_triggers = [self.textbox.submit, self.submit_btn.click] if self.submit_btn else [self.textbox.submit]
         ######### ######### ######### ######### #########
         if self.side_by_side:
-            submit_fn_2 = partial(self._stream_fn, fn=self.fn_2) if self.is_generator else partial(self._submit_fn, fn=self.fn_2)
+            submit_fn_2 = self._stream_fn_2 if self.is_generator else self._submit_fn_2
 
             addition_inputs_1 = [self.additional_inputs[0]] + self.additional_inputs[2:]
             addition_inputs_2 = [self.additional_inputs[1]] + self.additional_inputs[2:]
@@ -767,7 +768,6 @@ class EnhancedChatInterface(Blocks):
 
     async def _submit_fn(
         self,
-        fn,
         message: str | dict[str, list],
         history_with_input: list[list[str | tuple | None]],
         request: Request,
@@ -778,12 +778,37 @@ class EnhancedChatInterface(Blocks):
             history = history_with_input[:-remove_input]
         else:
             history = history_with_input[:-1]
-        inputs, _, _ = special_args(fn, inputs=[message, history, *args], request=request)
+        inputs, _, _ = special_args(self.fn, inputs=[message, history, *args], request=request)
 
         if self.is_async:
-            response = await fn(*inputs)
+            response = await self.fn(*inputs)
         else:
-            response = await anyio.to_thread.run_sync(fn, *inputs, limiter=self.limiter)
+            response = await anyio.to_thread.run_sync(self.fn, *inputs, limiter=self.limiter)
+
+        if self.multimodal and isinstance(message, dict):
+            self._append_multimodal_history(message, response, history)
+        elif isinstance(message, str):
+            history.append([message, response])
+        return history, history
+
+    async def _submit_fn_2(
+        self,
+        message: str | dict[str, list],
+        history_with_input: list[list[str | tuple | None]],
+        request: Request,
+        *args,
+    ) -> tuple[list[list[str | tuple | None]], list[list[str | tuple | None]]]:
+        if self.multimodal and isinstance(message, dict):
+            remove_input = len(message["files"]) + 1 if message["text"] is not None else len(message["files"])
+            history = history_with_input[:-remove_input]
+        else:
+            history = history_with_input[:-1]
+        inputs, _, _ = special_args(self.fn_2, inputs=[message, history, *args], request=request)
+
+        if self.is_async:
+            response = await self.fn_2(*inputs)
+        else:
+            response = await anyio.to_thread.run_sync(self.fn_2, *inputs, limiter=self.limiter)
 
         if self.multimodal and isinstance(message, dict):
             self._append_multimodal_history(message, response, history)
@@ -793,7 +818,6 @@ class EnhancedChatInterface(Blocks):
 
     async def _stream_fn(
         self,
-        fn,
         message: str | dict[str, list],
         history_with_input: list[list[str | tuple | None]],
         request: Request,
@@ -804,12 +828,56 @@ class EnhancedChatInterface(Blocks):
             history = history_with_input[:-remove_input]
         else:
             history = history_with_input[:-1]
-        inputs, _, _ = special_args(fn, inputs=[message, history, *args], request=request)
+        inputs, _, _ = special_args(self.fn, inputs=[message, history, *args], request=request)
 
         if self.is_async:
-            generator = fn(*inputs)
+            generator = self.fn(*inputs)
         else:
-            generator = await anyio.to_thread.run_sync(fn, *inputs, limiter=self.limiter)
+            generator = await anyio.to_thread.run_sync(self.fn, *inputs, limiter=self.limiter)
+            generator = SyncToAsyncIterator(generator, self.limiter)
+        try:
+            first_response = await async_iteration(generator)
+            if self.multimodal and isinstance(message, dict):
+                for x in message["files"]:
+                    history.append([(x,), None])
+                update = history + [[message["text"], first_response]]
+                yield update, update
+            else:
+                update = history + [[message, first_response]]
+                yield update, update
+        except StopIteration:
+            if self.multimodal and isinstance(message, dict):
+                self._append_multimodal_history(message, None, history)
+                yield history, history
+            else:
+                update = history + [[message, None]]
+                yield update, update
+        async for response in generator:
+            if self.multimodal and isinstance(message, dict):
+                update = history + [[message["text"], response]]
+                yield update, update
+            else:
+                update = history + [[message, response]]
+                yield update, update
+
+    async def _stream_fn_2(
+        self,
+        message: str | dict[str, list],
+        history_with_input: list[list[str | tuple | None]],
+        request: Request,
+        *args,
+    ) -> AsyncGenerator:
+        if self.multimodal and isinstance(message, dict):
+            remove_input = len(message["files"]) + 1 if message["text"] is not None else len(message["files"])
+            history = history_with_input[:-remove_input]
+        else:
+            history = history_with_input[:-1]
+        inputs, _, _ = special_args(self.fn_2, inputs=[message, history, *args], request=request)
+
+        if self.is_async:
+            generator = self.fn_2(*inputs)
+        else:
+            generator = await anyio.to_thread.run_sync(self.fn_2, *inputs, limiter=self.limiter)
             generator = SyncToAsyncIterator(generator, self.limiter)
         try:
             first_response = await async_iteration(generator)
