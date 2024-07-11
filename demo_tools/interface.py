@@ -27,6 +27,7 @@ import inspect
 import json  # Added imports
 import os  # Added imports
 import re
+from functools import partial
 from typing import AsyncGenerator, Callable, Literal, Union, cast
 
 import anyio
@@ -396,10 +397,12 @@ class EnhancedChatInterface(Blocks):
             self._setup_api()
 
     def _setup_events(self) -> None:
-        submit_fn = self._stream_fn if self.is_generator else self._submit_fn
+        submit_fn = partial(self._stream_fn, fn=self.fn) if self.is_generator else partial(self._submit_fn, fn=self.fn)
         submit_triggers = [self.textbox.submit, self.submit_btn.click] if self.submit_btn else [self.textbox.submit]
         ######### ######### ######### ######### #########
         if self.side_by_side:
+            submit_fn_2 = partial(self._stream_fn, fn=self.fn_2) if self.is_generator else partial(self._submit_fn, fn=self.fn_2)
+
             addition_inputs_1 = [self.additional_inputs[0]] + self.additional_inputs[2:]
             addition_inputs_2 = [self.additional_inputs[1]] + self.additional_inputs[2:]
             submit_event = (
@@ -434,7 +437,7 @@ class EnhancedChatInterface(Blocks):
                     show_progress=cast(Literal["full", "minimal", "hidden"], self.show_progress),
                 )
                 .then(
-                    submit_fn,
+                    submit_fn_2,
                     [self.saved_input, self.chatbot_state] + addition_inputs_2,
                     [self.chatbot_2, self.chatbot_state_2],
                     show_api=False,
@@ -764,6 +767,7 @@ class EnhancedChatInterface(Blocks):
 
     async def _submit_fn(
         self,
+        fn,
         message: str | dict[str, list],
         history_with_input: list[list[str | tuple | None]],
         request: Request,
@@ -774,12 +778,12 @@ class EnhancedChatInterface(Blocks):
             history = history_with_input[:-remove_input]
         else:
             history = history_with_input[:-1]
-        inputs, _, _ = special_args(self.fn, inputs=[message, history, *args], request=request)
+        inputs, _, _ = special_args(fn, inputs=[message, history, *args], request=request)
 
         if self.is_async:
-            response = await self.fn(*inputs)
+            response = await fn(*inputs)
         else:
-            response = await anyio.to_thread.run_sync(self.fn, *inputs, limiter=self.limiter)
+            response = await anyio.to_thread.run_sync(fn, *inputs, limiter=self.limiter)
 
         if self.multimodal and isinstance(message, dict):
             self._append_multimodal_history(message, response, history)
@@ -789,6 +793,7 @@ class EnhancedChatInterface(Blocks):
 
     async def _stream_fn(
         self,
+        fn,
         message: str | dict[str, list],
         history_with_input: list[list[str | tuple | None]],
         request: Request,
@@ -799,12 +804,12 @@ class EnhancedChatInterface(Blocks):
             history = history_with_input[:-remove_input]
         else:
             history = history_with_input[:-1]
-        inputs, _, _ = special_args(self.fn, inputs=[message, history, *args], request=request)
+        inputs, _, _ = special_args(fn, inputs=[message, history, *args], request=request)
 
         if self.is_async:
-            generator = self.fn(*inputs)
+            generator = fn(*inputs)
         else:
-            generator = await anyio.to_thread.run_sync(self.fn, *inputs, limiter=self.limiter)
+            generator = await anyio.to_thread.run_sync(fn, *inputs, limiter=self.limiter)
             generator = SyncToAsyncIterator(generator, self.limiter)
         try:
             first_response = await async_iteration(generator)
