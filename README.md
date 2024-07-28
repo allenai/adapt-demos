@@ -144,20 +144,22 @@ This isn’t needed for HuggingFace model, just bypass directly to “**Starting
 ### Starting Server 
 
 NOTE: If your model doesn’t have the chat template in the tokenizer config, see the below snipper.
-
-    python -m vllm.entrypoints.openai.api_server --model {path or huggingface} --tensor-parallel-size {number of GPUs in session}
-    python -m vllm.entrypoints.openai.api_server --model /net/nfs.cirrascale/allennlp/nathanl/models/tulu_2_llama_3_8b_dpo/ --tensor-parallel-size 2
-    python -m vllm.entrypoints.openai.api_server --model /net/nfs.cirrascale/aristo/oyvindt/olmo-models/olmo-70b-1T-step160500-hf/ --tensor-parallel-size 2
-
+```
+python -m vllm.entrypoints.openai.api_server --model {path or huggingface} --tensor-parallel-size {number of GPUs in session}
+python -m vllm.entrypoints.openai.api_server --model /net/nfs.cirrascale/allennlp/nathanl/models/tulu_2_llama_3_8b_dpo/ --tensor-parallel-size 2
+python -m vllm.entrypoints.openai.api_server --model /net/nfs.cirrascale/aristo/oyvindt/olmo-models/olmo-70b-1T-step160500-hf/ --tensor-parallel-size 2
+```
 **No chat template?** If there is not chat template in the tokenizer, you must pass a chat template to vllm with `--chat\_template={template.jinja}`. Some are provided in the [gradio repository](https://huggingface.co/spaces/ai2-adapt-dev/chat-demo-example), which you can clone and pass the local file in when using vllm, as so:
 
-    cd /net/nfs.cirrascale/allennlp/nathanl/chat-demo-example
-    python -m vllm.entrypoints.openai.api_server --model /net/nfs.cirrascale/mosaic/liweij/auto_jailbreak/src/EasyLM/models/v3/tulu2mix-all-vani_b-50000-vani_h-50000-adv_b-50000-adv_h-50000 --tensor-parallel-size 3 --chat-template=templates/none.jinja
+```
+cd /net/nfs.cirrascale/allennlp/nathanl/chat-demo-example
+python -m vllm.entrypoints.openai.api_server --model /net/nfs.cirrascale/mosaic/liweij/auto_jailbreak/src/EasyLM/models/v3/tulu2mix-all-vani_b-50000-vani_h-50000-adv_b-50000-adv_h-50000 --tensor-parallel-size 3 --chat-template=templates/none.jinja
+```
+**For safety models** You need to run an API server (e.g., adding a wildguard model), note that the chat template and prompting for Wildguard is handled in the repository, so no jinja template is needed.
 
-**For safety models** You need to run an API server (e.g., adding a wildguard model), MODIFY
-
-    python -m vllm.entrypoints.openai.api_server --model allenai/wildguard --tensor-parallel-size 2 --port 8001
-
+```
+python -m vllm.entrypoints.openai.api_server --model allenai/wildguard --tensor-parallel-size 2 --port 8001
+```
 This one does not need a chat template as it is handled elsewhere in the code (for now).
 
 ### Set up Gradio UI ON A BEAKER MACHINE
