@@ -51,6 +51,9 @@ We also add OpenAI endpoint compatible tools for debugging chat demos.
 ├── app.py                      <- Base demo
 └── pyproject.toml              <- Requirements and setup
 ```
+Noteable features:
+* [Custom Gradio ChatInterface for support of safety filters, side-by-side, and more small changes](https://github.com/allenai/adapt-demos/blob/main/demo_tools/interface.py).
+* [Debugging client for OpenAI style endpoints](https://github.com/allenai/adapt-demos/blob/main/demo_tools/model_client.py) without turning on GPUs or spending on the API.
 
 ## References & Setup
 
