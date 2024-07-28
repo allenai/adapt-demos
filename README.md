@@ -58,20 +58,11 @@ Noteable features:
 ## References & Setup
 
 * [VLLM endpoint docs](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) 
-
-* Image for now: 
-
-  * [nathanl/rb\_v20](https://beaker.org/im/01J15RB4DZC5QJJ4R51GMHMD00/details) (has latest VLLM from source), but TODO make a new lightweight image for this
-
-  * TODO Recreate [nathanl/vllm\_image](https://beaker.org/im/01HW8PSRJ9CHVG8HMV5RESK265/details) (for VLLM + latest OLMo models - transformers v4.40)
-
-* [Exposing port with Beaker](https://beaker-docs.apps.allenai.org/interactive/configuration.html#exposing-ports)  --port 8000
-
 * [WildGuard Repo](https://github.com/allenai/wildguard) More information on the safety models
-
     * [WildGaurd Model](https://huggingface.co/allenai/wildguard) based on Mistral 7B
-
     * More models coming soon
+* (Ai2 Internal)  Suggested docker image: [nathanl/rb\_v20](https://beaker.org/im/01J15RB4DZC5QJJ4R51GMHMD00/details) (has latest VLLM from source), but TODO make a new lightweight image for this.
+* (Ai2 Internal) [Exposing port with Beaker](https://beaker-docs.apps.allenai.org/interactive/configuration.html#exposing-ports)  --port 8000
 
 ## Developing
 
@@ -96,7 +87,6 @@ With `app.py` or `app-dual.py` pass the arg `--debug` as follows:
 python app.py --debug --port 1234 --model tmp --safety_filter_port 1234 --safety_model luca
 python app-dual.py --model_one tmp --model_two TMEPPP --port_one 1234 --port_two 2333 --debug
 ```
-
 
 ## Workflow
 
@@ -139,7 +129,9 @@ This isn’t needed for HuggingFace model, just bypass directly to “**Starting
 
 **(**[Dataset docs](https://beaker-docs.apps.allenai.org/concept/datasets.html)) Grab a model from Beaker datasets, or run one on NFS already. Keep track of the URL you create.
 
-    beaker dataset fetch hamishivi/tulu_2_llama_3_8b_dpo -o models/
+```
+beaker dataset fetch hamishivi/tulu_2_llama_3_8b_dpo -o models/
+```
 
 ### Starting Server 
 
@@ -171,23 +163,24 @@ Clone this repo example: <https://huggingface.co/spaces/ai2-adapt-dev/chat-demo-
 Requirements: Gradio, openai
 
 ```
-
 pip install gradio openai
-
 ```
 
 **Run the model!**
-
-    python app.py --port 32800 --model /net/nfs.cirrascale/allennlp/nathanl/models/tulu_2_llama_3_8b_dpo/
-
+```
+python app.py --port 32800 --model /net/nfs.cirrascale/allennlp/nathanl/models/tulu_2_llama_3_8b_dpo/
+```
 **For Safety Models** run the following command: if you run on the same machine on which you created the beaker session, no need to provide a port:
 
-    python app.py --model /net/nfs.cirrascale/mosaic/liweij/auto_jailbreak/src/EasyLM/models/v3/tulu2mix-all-vani_b-50000-vani_h-50000-adv_b-50000-adv_h-50000 --safety_model allenai/wildguard 
+```
+python app.py --model /net/nfs.cirrascale/mosaic/liweij/auto_jailbreak/src/EasyLM/models/v3/tulu2mix-all-vani_b-50000-vani_h-50000-adv_b-50000-adv_h-50000 --safety_model allenai/wildguard 
+```
+It’ll print something like
 
-It’ll print something like\
+```
 Running on local URL:  http\://127.0.0.1:7860
-
 Running on public URL: https\://07f435dc8d326c0254.gradio.live
+```
 
 The second one is what you share with your team 🙂
 
@@ -197,34 +190,34 @@ Using multiple models will mean you need to pass --port to vllm (the default vll
 
 
 ## Example Dockerfile
+```
+# TODO: Update this when releasing RewardBench publicly
+# This dockerfile is forked from ai2/cuda11.8-cudnn8-dev-ubuntu20.04
+# To get the latest id, run `beaker image pull ai2/cuda11.8-cudnn8-dev-ubuntu20.04`
+# and then `docker image list`, to verify docker image is pulled
+# e.g. `Image is up to date for gcr.io/ai2-beaker-core/public/cncl3kcetc4q9nvqumrg:latest`
+FROM gcr.io/ai2-beaker-core/public/cojd4q5l9jpqudh7p570:latest
 
-    # TODO: Update this when releasing RewardBench publicly
-    # This dockerfile is forked from ai2/cuda11.8-cudnn8-dev-ubuntu20.04
-    # To get the latest id, run `beaker image pull ai2/cuda11.8-cudnn8-dev-ubuntu20.04`
-    # and then `docker image list`, to verify docker image is pulled
-    # e.g. `Image is up to date for gcr.io/ai2-beaker-core/public/cncl3kcetc4q9nvqumrg:latest`
-    FROM gcr.io/ai2-beaker-core/public/cojd4q5l9jpqudh7p570:latest
+RUN apt update && apt install -y openjdk-8-jre-headless
 
-    RUN apt update && apt install -y openjdk-8-jre-headless
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+RUN apt-get -y install git-lfs
 
-    RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-    RUN apt-get -y install git-lfs
+WORKDIR /stage/
 
-    WORKDIR /stage/
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
-    RUN pip install --upgrade pip setuptools wheel
-    RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+RUN pip install transformers
+RUN pip install flash-attn==2.5.2 --no-build-isolation
+RUN pip install jinja2 
+RUN pip install anthropic
+RUN pip install openai
+RUN pip install git+https://github.com/Isotr0py/vllm.git@olmo
 
-    RUN pip install transformers
-    RUN pip install flash-attn==2.5.2 --no-build-isolation
-    RUN pip install jinja2 
-    RUN pip install anthropic
-    RUN pip install openai
-    RUN pip install git+https://github.com/Isotr0py/vllm.git@olmo
-
-    # for interactive session
-    RUN chmod -R 777 /stage/
-
+# for interactive session
+RUN chmod -R 777 /stage/
+```
 
 ## Extra Notes
 
@@ -238,6 +231,9 @@ This is nasty to debug, good luck.
 ```
 mkdir -p "/root/.cache/huggingface" && echo -n "${HUGGING_FACE_HUB_TOKEN}" > "/root/.cache/huggingface/token"
 ```
+
+### Beaker host networking
+If you feel like your jobs on beaker aren't connecting right, make sure launch the beaker session with `--hostNetworking` (or the equivalent).
 
 ### Useful Commands / Ideas
 
