@@ -88,6 +88,12 @@ _To add or request new features, please [open an issue](https://github.com/allen
 
 ### Docker
 
+For base usage, consider using [VLLM's images](https://hub.docker.com/r/vllm/vllm-openai/tags), but they are not built pre-release for cutting edge models.
+They can be loaded in Beaker with:
+```
+beaker sesion ... --image=docker://image/name
+```
+
 To update the image, run these commands in the root directory of this repo:
 ```
 docker build -t <local_image_name> . --platform linux/amd64
