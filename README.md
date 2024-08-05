@@ -1,5 +1,5 @@
 
-# AI2 Adapt Demo Tools
+# Ai2 Basic Demo Tools
 
 An important part of modern language model (LM) research is making tools that are easy to use and effective.
 In this repo, we have our lightweight Gradio tools for completing many needed tasks for vibe-checking your model.
