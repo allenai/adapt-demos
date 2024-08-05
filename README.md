@@ -80,6 +80,20 @@ Requirements are in [`pyproject.toml`](https://github.com/allenai/adapt-demos/bl
 
 _To add or request new features, please [open an issue](https://github.com/allenai/adapt-demos/issues/new/choose)._
 
+### Docker
+
+For base usage, consider using [VLLM's images](https://hub.docker.com/r/vllm/vllm-openai/tags), but they are not built pre-release for cutting edge models.
+They can be loaded in Beaker with:
+```
+beaker sesion ... --image=docker://image/name
+```
+
+To update the image, run these commands in the root directory of this repo:
+```
+docker build -t <local_image_name> . --platform linux/amd64
+beaker image create <local_image_name> -n <beaker_image_name>
+```
+
 ### Debug mode
 We have added a debug mode for working on the interface without using GPUs. 
 With `app.py` or `app-dual.py` pass the arg `--debug` as follows:
