@@ -869,10 +869,10 @@ class EnhancedChatInterface(Blocks):
     ) -> AsyncGenerator:
         if self.multimodal and isinstance(message, dict):
             remove_input = len(message["files"]) + 1 if message["text"] is not None else len(message["files"])
-            history = history_with_input[:-remove_input]
+            history_2 = history_with_input[:-remove_input] if history_with_input else []
         else:
-            history = history_with_input[:-1]
-        inputs, _, _ = special_args(self.fn_2, inputs=[message, history, *args], request=request)
+            history_2 = history_with_input[:-1] if history_with_input else []
+        inputs, _, _ = special_args(self.fn_2, inputs=[message, history_2, *args], request=request)
 
         if self.is_async:
             generator = self.fn_2(*inputs)
@@ -883,25 +883,25 @@ class EnhancedChatInterface(Blocks):
             first_response = await async_iteration(generator)
             if self.multimodal and isinstance(message, dict):
                 for x in message["files"]:
-                    history.append([(x,), None])
-                update = history + [[message["text"], first_response]]
+                    history_2.append([(x,), None])
+                update = history_2 + [[message["text"], first_response]]
                 yield update, update
             else:
-                update = history + [[message, first_response]]
+                update = history_2 + [[message, first_response]]
                 yield update, update
         except StopIteration:
             if self.multimodal and isinstance(message, dict):
-                self._append_multimodal_history(message, None, history)
-                yield history, history
+                self._append_multimodal_history(message, None, history_2)
+                yield history_2, history_2
             else:
-                update = history + [[message, None]]
+                update = history_2 + [[message, None]]
                 yield update, update
         async for response in generator:
             if self.multimodal and isinstance(message, dict):
-                update = history + [[message["text"], response]]
+                update = history_2 + [[message["text"], response]]
                 yield update, update
             else:
-                update = history + [[message, response]]
+                update = history_2 + [[message, response]]
                 yield update, update
 
     async def _examples_fn(self, message: str, *args) -> list[list[str | None]]:
