@@ -439,7 +439,7 @@ class EnhancedChatInterface(Blocks):
                 )
                 .then(
                     submit_fn_2,
-                    [self.saved_input, self.chatbot_state] + addition_inputs_2,
+                    [self.saved_input, self.chatbot_state_2] + addition_inputs_2,
                     [self.chatbot_2, self.chatbot_state_2],
                     show_api=False,
                     concurrency_limit=cast(Union[int, Literal["default"], None], self.concurrency_limit),
